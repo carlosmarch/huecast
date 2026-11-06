@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Huecast · The weather as a picture</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Huecast turns the forecast into a picture: one circle, one sky and the weather drawn live. Free, no account, no tracking.">
+  <meta name="theme-color" content="#0e0e0f">
+  <meta name="color-scheme" content="dark">
+  <meta property="og:title" content="Huecast · The weather as a picture">
+  <meta property="og:description" content="One circle, one sky and the weather drawn live. Free, no account, no tracking.">
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="landing.css">
+  <script type="module" src="landing.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="nav">
+    <div class="wrap nav__inner">
+      <a class="brand" href="./" aria-label="Huecast home">
+        <img src="../icons/icon.svg" alt="" width="22" height="22">
+        <span>Huecast</span>
+      </a>
+      <nav class="nav__links" aria-label="Sections">
+        <a href="#sky">Sky</a>
+        <a href="#weather">Weather</a>
+        <a href="#timeline">Timeline</a>
+        <a href="#explore">Explore</a>
+        <a href="#changelog">Changelog</a>
+        <a href="../how.html">How it works</a>
+      </nav>
+      <a class="btn btn--light btn--sm" href="../">Open app</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============ HERO ============ -->
+    <section class="hero wrap">
+      <h1 class="hero__title">The weather,<br>drawn as a picture</h1>
+      <div class="hero__row">
+        <p class="hero__lead">One circle, one sky and a few words. Huecast paints the forecast with colour, light and particles. No photos, no icons.</p>
+        <a class="hero__new" href="#explore"><span class="pill">New</span> Explore the world's extremes <span aria-hidden="true">→</span></a>
+      </div>
+
+      <div class="window" id="hero-window">
+        <div class="window__bar">
+          <i></i><i></i><i></i>
+          <span class="window__url">huecast.netlify.app</span>
+        </div>
+        <div class="window__screen">
+          <iframe id="hero-app" title="Huecast, running live" src="../?demo&amp;saved=1&amp;code=1&amp;temp=24&amp;hour=19.4&amp;wind=8&amp;name=Valencia"></iframe>
+        </div>
+      </div>
+      <p class="hero__hint">This is the real app. Drag across the bars at the bottom.</p>
+    </section>
+
+    <!-- ============ FACTS STRIP ============ -->
+    <section class="facts wrap" aria-label="At a glance">
+      <ul>
+        <li><b>Open‑Meteo</b><span>forecast data</span></li>
+        <li><b>0</b><span>accounts, ads or trackers</span></li>
+        <li><b>24 h</b><span>scrubbable forecast</span></li>
+        <li><b>Offline</b><span>installable app</span></li>
+        <li><b>°C / °F</b><span>one tap</span></li>
+        <li><b>Since 2016</b><span>first as Timecast</span></li>
+      </ul>
+    </section>
+
+    <!-- ============ STATEMENT ============ -->
+    <section class="statement wrap">
+      <h2 class="big"><strong>A new kind of weather app.</strong> Not a dashboard full of numbers, a sky. Huecast reads the temperature, the hour, the cloud, rain, snow, fog and wind for any place on Earth, and paints them.</h2>
+      <div class="trio" id="trio">
+        <figure>
+          <div class="trio__art" data-art="sky"></div>
+          <figcaption><span>1.1</span><b>The sky</b>Two colours: one for the hour, one for the temperature.</figcaption>
+        </figure>
+        <figure>
+          <div class="trio__art" data-art="circle"></div>
+          <figcaption><span>1.2</span><b>The circle</b>The sun by day, a ring by night. Hotter skies pulse and glow.</figcaption>
+        </figure>
+        <figure>
+          <div class="trio__art" data-art="weather"></div>
+          <figcaption><span>1.3</span><b>The weather</b>Rain, snow, fog and wind, drawn live from measured amounts.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============ 2.0 SKY ============ -->
+    <section class="feature wrap" id="sky">
+      <div class="feature__head">
+        <h2><span class="dot" style="--c: var(--temp-hot)"></span>Colour from<br>the real sky</h2>
+        <div>
+          <p>The background blends a <strong>time-of-day</strong> colour with a <strong>temperature</strong> colour. Sunrise always gets the dawn colours and sunset the evening ones, so a short winter day keeps its light in step with the sun.</p>
+          <a class="more" href="../how.html">How the colours work <span aria-hidden="true">›</span></a>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="scales">
+          <div class="scale">
+            <div class="scale__label"><span>Time of day</span><span id="scale-time-val"></span></div>
+            <div class="scale__bar" id="scale-time"><i class="scale__knob" id="knob-time"></i></div>
+            <div class="scale__ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+          </div>
+          <div class="scale">
+            <div class="scale__label"><span>Temperature</span><span id="scale-temp-val"></span></div>
+            <div class="scale__bar" id="scale-temp"><i class="scale__knob" id="knob-temp"></i></div>
+            <div class="scale__ticks"><span>−20°</span><span>0°</span><span>20°</span><span>40°</span></div>
+          </div>
+          <p class="scales__hint">Drag either scale to mix a sky.</p>
+        </div>
+        <div class="stage stage--mix" id="mix-stage"></div>
+      </div>
+      <div class="subs">
+        <div><span>2.1</span><b>Real sunrise and sunset</b><p>Colours follow the location's own sun, not your clock.</p></div>
+        <div><span>2.2</span><b>Ice blue below zero</b><p>Deeper the colder it gets, with a halo under −5°.</p></div>
+        <div><span>2.3</span><b>Always readable</b><p>Text turns dark on very pale skies.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 3.0 WEATHER ============ -->
+    <section class="feature wrap" id="weather">
+      <div class="feature__head">
+        <h2><span class="dot" style="--c: var(--temp-frost)"></span>Weather,<br>drawn live</h2>
+        <div>
+          <p>Each kind of weather has steps, set by the measured amount: heavier rain falls faster, heavier snow has bigger flakes, thicker fog rises higher, and wind slants the rain. Only low, thick cloud hides the sun.</p>
+          <a class="more" href="../how.html">Every step, side by side <span aria-hidden="true">›</span></a>
+        </div>
+      </div>
+      <div class="panel panel--weather">
+        <div class="tabs" role="tablist" aria-label="Weather" id="wx-tabs"></div>
+        <div class="stage stage--wide" id="wx-stage"></div>
+      </div>
+      <div class="subs">
+        <div><span>3.1</span><b>One canvas</b><p>Hundreds of particles, paused when off screen.</p></div>
+        <div><span>3.2</span><b>Morphs, never jumps</b><p>Particles fade in and out as the weather changes.</p></div>
+        <div><span>3.3</span><b>Reduced motion</b><p>A still frame when your system asks for it.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 4.0 TIMELINE ============ -->
+    <section class="feature wrap" id="timeline">
+      <div class="feature__head">
+        <h2><span class="dot" style="--c: var(--temp-very-hot)"></span>24 hours<br>you can scrub</h2>
+        <div>
+          <p>The bars are the next day. Each one is a tiny copy of that hour's sky, its height is the temperature, and ticks above it mark the rain. Drag across them and the whole screen moves through the day.</p>
+          <a class="more" href="../">Try it on your forecast <span aria-hidden="true">›</span></a>
+        </div>
+      </div>
+      <div class="panel panel--timeline">
+        <div class="stage stage--wide" id="tl-stage"></div>
+        <div class="tl">
+          <div class="tl__label" id="tl-label">Now</div>
+          <div class="tl__track" id="tl-track" role="slider" tabindex="0" aria-label="Forecast hour" aria-valuemin="0" aria-valuemax="23" aria-valuenow="0"></div>
+          <div class="tl__night" id="tl-night"></div>
+        </div>
+      </div>
+      <div class="subs">
+        <div><span>4.1</span><b>Feels like</b><p>Wind and humidity, shown next to the hour.</p></div>
+        <div><span>4.2</span><b>Moon to sun</b><p>A line under the bars marks the night.</p></div>
+        <div><span>4.3</span><b>Keyboard</b><p><kbd>←</kbd> <kbd>→</kbd> move hour by hour.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 5.0 EXPLORE ============ -->
+    <section class="feature wrap" id="explore">
+      <div class="feature__head">
+        <h2><span class="dot" style="--c: var(--time-dawn)"></span>Explore<br>and keep</h2>
+        <div>
+          <p>Search any city, or let the dice take you somewhere extreme right now: the coldest, hottest, wettest, snowiest, stormiest, foggiest or windiest place, or wherever it's golden hour. Pin the places you check, and save a scene to open again later.</p>
+          <a class="more" href="../">Roll the dice <span aria-hidden="true">›</span></a>
+        </div>
+      </div>
+      <div class="extremes" id="extremes"></div>
+      <div class="subs">
+        <div><span>5.1</span><b>Pins</b><p>Your places, first in search.</p></div>
+        <div><span>5.2</span><b>Saved scenes</b><p>Place, hour and its 24-hour forecast.</p></div>
+        <div><span>5.3</span><b>Share</b><p>A link, or the screen as a picture.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ CHANGELOG ============ -->
+    <section class="changelog wrap" id="changelog">
+      <h2>Changelog</h2>
+      <ol class="log">
+        <li>
+          <i class="log__swatch" data-sky="2 12"></i>
+          <time>Feb 2016</time>
+          <b>Timecast</b>
+          <p>One circle and a gradient made from temperature × time of day, drawn with jQuery and hundreds of divs.</p>
+        </li>
+        <li>
+          <i class="log__swatch" data-sky="13 24"></i>
+          <time>2026</time>
+          <b>Rebuilt as Huecast</b>
+          <p>Open‑Meteo over HTTPS with no key, one canvas, plain ES modules and zero dependencies.</p>
+        </li>
+        <li>
+          <i class="log__swatch" data-sky="18 20"></i>
+          <time>2026</time>
+          <b>24-hour timeline</b>
+          <p>Drag to watch the sky change hour by hour, with feels-like and rain marks.</p>
+        </li>
+        <li>
+          <i class="log__swatch" data-sky="6 -12"></i>
+          <time>2026</time>
+          <b>Explore extremes</b>
+          <p>The coldest, hottest, stormiest places right now, and where it's golden hour.</p>
+        </li>
+      </ol>
+      <a class="more" href="https://github.com/carlosmarch/huecast">See the code <span aria-hidden="true">›</span></a>
+    </section>
+
+    <!-- ============ CARDS ============ -->
+    <section class="cards wrap">
+      <article class="card card--sky" id="card-privacy">
+        <p class="card__quote">“No server, no account, no tracking. Your places stay in your browser.”</p>
+        <div class="card__foot">
+          <span class="card__icon" aria-hidden="true">◐</span>
+          <span><b>Privacy</b><small>Your location only goes to the forecast service.</small></span>
+        </div>
+      </article>
+      <article class="card card--noon">
+        <p class="card__quote">“Make the sky your desktop wallpaper.”</p>
+        <div class="card__foot">
+          <span class="card__icon" aria-hidden="true">▢</span>
+          <span><b>Wallpaper mode</b><small>Add <code>?wallpaper</code> to any place.</small></span>
+        </div>
+      </article>
+    </section>
+    <p class="cards__note wrap">Huecast is free and open. <a href="https://github.com/carlosmarch/huecast">Read the source</a> or <a href="../how.html">learn how it works</a>.</p>
+
+    <!-- ============ CTA ============ -->
+    <section class="cta">
+      <div class="stage stage--cta" id="cta-stage" aria-hidden="true"></div>
+      <div class="cta__inner">
+        <h2>Look up.<br>Available today.</h2>
+        <div class="cta__btns">
+          <a class="btn btn--light" href="../">Open Huecast</a>
+          <a class="btn btn--ghost" href="../how.html">How it works</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot wrap">
+    <div class="foot__brand">
+      <img src="../icons/icon.svg" alt="" width="20" height="20">
+    </div>
+    <div class="foot__col">
+      <h3>Product</h3>
+      <a href="#sky">Sky</a>
+      <a href="#weather">Weather</a>
+      <a href="#timeline">Timeline</a>
+      <a href="#explore">Explore</a>
+    </div>
+    <div class="foot__col">
+      <h3>Use</h3>
+      <a href="../">Open the app</a>
+      <a href="../?city=random">Random capital</a>
+      <a href="../?wallpaper&amp;city=random">Wallpaper</a>
+      <a href="../how.html">How it works</a>
+    </div>
+    <div class="foot__col">
+      <h3>Data</h3>
+      <a href="https://open-meteo.com">Open‑Meteo</a>
+      <a href="https://www.bigdatacloud.com">BigDataCloud</a>
+    </div>
+    <div class="foot__col">
+      <h3>Project</h3>
+      <a href="https://github.com/carlosmarch/huecast">GitHub</a>
+      <a href="#changelog">Changelog</a>
+    </div>
+    <p class="foot__legal">Huecast · made in 2016 as Timecast, rebuilt in 2026 · Carlos March</p>
+  </footer>
+</body>
+</html>
