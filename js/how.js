@@ -2,7 +2,7 @@
    (palette, conditions, scene), so it always matches the app. */
 
 import { colorByCelsius, colorByHour, skyColors, mix, luminance, sunIntensity, starsByHour, isDayHour, SUN_STEPS, token } from './palette.js';
-import { getCondition, weatherMarks, iceHalo, STEPS, CALM_WIND, MIST_VISIBILITY } from './conditions.js';
+import { getCondition, weatherMarks, iceHalo, STEPS, CALM_WIND } from './conditions.js';
 import { createScene } from './scene.js';
 import { rollText } from './roll.js';
 
@@ -141,8 +141,7 @@ $('#demo-circles').append(
   ...sunTiles,
   tile({ hour: 12, temp: 16, code: 3, title: 'Clouds', sub: 'veiled sun' }),
   tile({ hour: 23, temp: 14, title: 'Night', sub: 'moon, stars', live: true }),
-  tile({ hour: 12, temp: -12, title: 'Below −5°', sub: 'ice halo' }),
-  tile({ hour: 23, temp: -15, title: 'Cold night', sub: 'halo, stars', live: true }),
+  tile({ hour: 23, temp: -15, title: 'Below −5°', sub: 'ice halo', live: true }),
 );
 
 /* 02 · The sky: the two scales, then examples */
@@ -152,27 +151,7 @@ const temps = Array.from({ length: 25 }, (_, i) => -20 + i * 2.5); // -20° .. 4
 const tempStops = temps.map((t, i) => `${colorByCelsius(t)} ${(i / (temps.length - 1) * 100).toFixed(1)}%`);
 $('#strip-temp').style.background = `linear-gradient(90deg, ${tempStops.join(', ')})`;
 
-const skies = [
-  { hour: 13, temp: 31, title: '13:00 · 31°', sub: 'clear' },
-  { hour: 2, temp: 12, title: '02:00 · 12°', sub: 'clear night' },
-  { hour: 12, temp: 9, code: 3, title: '12:00 · 9°', sub: 'overcast' },
-  { hour: 10.5, temp: 18, code: 1, title: '10:30 · 18°', sub: 'pale: dark text' },
-];
-$('#demo-skies').append(...skies.map(c => tile(c)));
-
 /* 03 · The weather: every step of each kind, live */
-const CLOUDS = [
-  { code: 1, cloud: 20, title: 'Few clouds', sub: '20%' },
-  { code: 2, cloud: 50, title: 'Partly cloudy', sub: '50%' },
-  { code: 3, cloud: 75, title: 'Mostly cloudy', sub: '75%' },
-  { code: 3, cloud: 100, title: 'Overcast', sub: '100% · veiled sun' },
-  { code: 3, cloud: 100, lowCloud: 10, title: 'High cloud', sub: '100% · sun shines' },
-];
-$('#demo-clouds').append(...CLOUDS.map(c => tile({
-  hour: 13, temp: 20, code: c.code, data: { cloud: c.cloud, lowCloud: c.lowCloud ?? c.cloud },
-  title: c.title, sub: c.sub, live: true,
-})));
-
 const RAIN_AT = [0.3, 1.5, 5, 12, 35, 70];
 $('#demo-rain').append(...STEPS.rain.steps.map((st, i) => withMark(tile({
   hour: 15, temp: 14, code: 63, data: { rain: RAIN_AT[i], snow: 0, vis: 20000 },
@@ -185,32 +164,14 @@ $('#demo-snow').append(...STEPS.snow.steps.map((st, i) => withMark(tile({
   title: st.name, sub: range(STEPS.snow.steps, i), live: true,
 }), 'snow', i + 1)));
 
-const FOG = [
-  { code: 2, vis: 2500, sub: `1–${MIST_VISIBILITY / 1000} km` },
-  { code: 45, vis: 500, sub: '200 m–1 km' },
-  { code: 45, vis: 100, sub: '< 200 m' },
-];
-$('#demo-fog').append(...STEPS.fog.steps.map((st, i) => tile({
-  hour: 8, temp: 9, code: FOG[i].code, data: { vis: FOG[i].vis, rain: 0, snow: 0 },
-  title: st.name, sub: FOG[i].sub, live: true,
-})));
-
-const STORM = [
-  { code: 95, rain: 0.4, sub: 'little rain' },
-  { code: 95, rain: 5, sub: 'rain, lightning' },
-  { code: 96, rain: 6, sub: 'hail' },
-  { code: 99, rain: 15, sub: 'heavy hail' },
-];
-$('#demo-storm').append(...STEPS.storm.steps.map((st, i) => tile({
-  hour: 18, temp: 24, code: STORM[i].code, data: { rain: STORM[i].rain, vis: 20000 },
-  title: st.name, sub: STORM[i].sub, live: true,
-})));
-
-const WIND_AT = [18, 32, 45, 62, 90];
-$('#demo-wind').append(...STEPS.wind.steps.map((st, i) => tile({
-  hour: 14, temp: 18, code: 2, wind: WIND_AT[i], data: { rain: 0, snow: 0, vis: 20000 },
-  title: st.name, sub: range(STEPS.wind.steps, i, CALM_WIND), live: true,
-})));
+/* everything else: one tile per kind, its heaviest-but-one step */
+$('#demo-other').append(
+  tile({ hour: 13, temp: 20, code: 2, data: { cloud: 50, lowCloud: 50 }, title: 'Clouds', sub: 'bands, by cover', live: true }),
+  tile({ hour: 12, temp: 12, code: 3, data: { cloud: 100, lowCloud: 100 }, title: 'Overcast', sub: 'veiled sun', live: true }),
+  tile({ hour: 8, temp: 9, code: 45, data: { vis: 300, rain: 0, snow: 0 }, title: STEPS.fog.steps[1].name, sub: '300 m visibility', live: true }),
+  tile({ hour: 18, temp: 24, code: 95, data: { rain: 5, vis: 20000 }, title: 'Storm', sub: 'lightning', live: true }),
+  tile({ hour: 14, temp: 18, code: 2, wind: 62, data: { rain: 0, snow: 0, vis: 20000 }, title: 'Wind', sub: `streaks from ${CALM_WIND} km/h`, live: true }),
+);
 
 /* 04 · The timeline: a sample day you can scrub */
 const day = [
@@ -269,20 +230,4 @@ track.addEventListener('pointerup', () => { dragging = false; });
 track.addEventListener('pointercancel', () => { dragging = false; });
 selectBar(0);
 
-/* Legend: which steps each mark stands for (from the same rules) */
-for (const kind of ['rain', 'snow']) {
-  const groups = {};
-  STEPS[kind].steps.forEach((st, i) => {
-    const n = weatherMarks(kind === 'rain' ? { rain: i + 1, snow: 0 } : { rain: 0, snow: i + 1 }).count;
-    (groups[n] ||= []).push(st.name.toLowerCase());
-  });
-  for (const [n, names] of Object.entries(groups)) {
-    const chip = document.createElement('span');
-    chip.className = 'mark-chip';
-    const label = document.createElement('span');
-    label.textContent = names.join(', ');
-    chip.append(markEl(kind, +n), label);
-    $(`#marks-${kind}`).append(chip);
-  }
-}
 document.querySelectorAll('.legend .mk[data-n]').forEach(m => { m.innerHTML = '<i></i>'.repeat(+m.dataset.n); });
