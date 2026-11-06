@@ -339,3 +339,11 @@ if (!reduceMotion.matches && 'IntersectionObserver' in window) {
   }, { rootMargin: '0px 0px -8% 0px' });
   els.forEach(el => { el.classList.add('reveal'); io.observe(el); });
 }
+
+/* Going to the app from here: remember it, so / opens the app next time
+   instead of this page (see the check in ../index.html) */
+document.addEventListener('click', e => {
+  const a = e.target.closest('a[href]');
+  if (!a || new URL(a.href).pathname !== new URL('../', location.href).pathname) return;
+  try { localStorage.setItem('tc-seen', '1'); } catch {}
+});
