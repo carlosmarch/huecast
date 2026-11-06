@@ -1,70 +1,83 @@
 /* ======================================================================
-   HOW IT WORKS page. Colours come from tokens.css only.
+   HOW IT WORKS page. Same look as the landing page (landing/landing.css);
+   sky colours come from tokens.css.
    ====================================================================== */
 :root {
-  --gutter: max(20px, env(safe-area-inset-left), env(safe-area-inset-right));
+  --page: #0e0e0f;
+  --panel: #141416;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --text: #f4f4f5;
+  --text-soft: #a1a1a8;
+  --text-faint: #6b6b73;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: max(16px, env(safe-area-inset-left), env(safe-area-inset-right));
   color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { background: var(--bg); }
+html { background: var(--page); }
 
 body {
   margin: 0;
   min-height: 100vh;
-  color: var(--ink);
+  background: var(--page);
+  color: var(--text);
   font-family: 'Inter', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* the loading-screen gradient, pinned behind the page (background-attachment:
-   fixed doesn't work on iOS) */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(-65deg, var(--bg-raised), var(--bg));
-}
-
 a { color: inherit; }
 
 :focus-visible {
-  outline: 1.5px solid var(--ink);
-  outline-offset: 4px;
+  outline: 1.5px solid var(--text);
+  outline-offset: 3px;
   border-radius: 6px;
 }
 
-/* ---- Top bar ---- */
-.topbar {
+.wrap {
+  width: 100%;
+  max-width: calc(760px + 2 * var(--gutter));
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+/* ---- Nav ---- */
+.nav {
   position: sticky;
   top: 0;
   z-index: 5;
+  padding-top: env(safe-area-inset-top);
+  background: rgba(14, 14, 15, 0.72);
+  backdrop-filter: saturate(1.4) blur(14px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+
+.nav__inner {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: max(10px, env(safe-area-inset-top)) var(--gutter) 10px;
-  background: var(--scrim);
-  backdrop-filter: blur(18px) saturate(1.2);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  height: 60px;
 }
 
 .back {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
+  margin-left: -6px;
   border-radius: 50%;
-  background: var(--glass);
-  box-shadow: inset 0 0 0 1px var(--glass-stroke);
   transition: background-color 0.2s ease;
 }
 
-.back:hover { background: var(--glass-hover); }
+.back:hover { background: rgba(255, 255, 255, 0.06); }
 
 .back svg,
 .ic svg {
@@ -77,80 +90,95 @@ a { color: inherit; }
   stroke-linejoin: round;
 }
 
-.topbar__title {
-  font-size: 15px;
-  font-weight: 600;
+.nav__title { font-weight: 600; letter-spacing: -0.01em; }
+
+.nav__link {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-soft);
+  text-decoration: none;
 }
+
+.nav__link:hover { color: var(--text); }
 
 /* ---- Content ---- */
 main {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 28px var(--gutter) max(40px, env(safe-area-inset-bottom));
+  padding-top: 72px;
+  padding-bottom: max(48px, env(safe-area-inset-bottom));
 }
 
 h1 {
-  margin: 12px 0 14px;
-  font-size: clamp(20px, 6vw, 26px);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  line-height: 1.3;
-}
-
-.lead {
-  font-size: 16px;
-  color: var(--ink);
-}
-
-section { margin-top: 48px; }
-
-h2 {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin: 0 0 12px;
-  font-size: 17px;
+  margin: 0;
+  font-size: clamp(36px, 6vw, 52px);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
   font-weight: 600;
 }
 
-h2 span {
-  font-weight: 400;
-  color: var(--ink-soft);
+.lead {
+  max-width: 48ch;
+  margin: 20px 0 0;
+  font-size: 17px;
+}
+
+.lead a { color: var(--text); text-decoration: none; white-space: nowrap; }
+.lead a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+section {
+  margin-top: 72px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+
+.sec__head { margin-bottom: 14px; }
+
+.sec__head span {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-faint);
   font-variant-numeric: tabular-nums;
 }
 
+h2 {
+  margin: 0;
+  font-size: clamp(24px, 3.4vw, 30px);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  font-weight: 600;
+}
+
+h3 {
+  margin: 28px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+h3 span {
+  margin-left: 8px;
+  font-weight: 400;
+  color: var(--text-faint);
+}
+
 p {
+  max-width: 60ch;
   margin: 0 0 16px;
-  font-size: 15px;
   line-height: 1.65;
-  color: var(--ink-soft);
+  color: var(--text-soft);
 }
 
-strong { color: var(--ink); font-weight: 600; }
+p a { color: var(--text); text-underline-offset: 3px; text-decoration-color: var(--line-strong); }
 
-/* ---- Demo tiles: small skies ---- */
-.tiles {
-  display: grid;
-  gap: 10px;
-  margin: 18px 0 8px;
-}
+strong { color: var(--text); font-weight: 500; }
 
-.tiles--3 { grid-template-columns: repeat(3, 1fr); }
-.tiles--4 { grid-template-columns: repeat(4, 1fr); }
-.tiles--5 { grid-template-columns: repeat(5, 1fr); }
-
-@media (max-width: 520px) {
-  .tiles { gap: 8px; }
-  .tiles--5 { grid-template-columns: repeat(3, 1fr); }
-}
-
+/* ---- Small skies ---- */
 .tile {
   position: relative;
   aspect-ratio: 3 / 4;
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
   background: var(--bg-raised);
-  box-shadow: inset 0 0 0 1px var(--glass-stroke);
+  box-shadow: inset 0 0 0 1px var(--line);
   isolation: isolate;
 }
 
@@ -187,19 +215,6 @@ strong { color: var(--ink); font-weight: 600; }
   display: block;
   font-weight: 400;
   opacity: 0.8;
-}
-
-/* Steps: a grid that wraps, every tile fully visible */
-h3 {
-  margin: 26px 0 0;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-h3 span {
-  margin-left: 8px;
-  font-weight: 400;
-  color: var(--ink-soft);
 }
 
 .steps {
@@ -264,36 +279,46 @@ h3 span {
   pointer-events: none;
 }
 
+/* the mark each rain / snow step gets, in the tile corner */
+.tile__mark {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  z-index: 2;
+  color: var(--tile-ink, var(--ink));
+  opacity: 0.85;
+}
+
 /* ---- Colour strips ---- */
-.strip { margin: 18px 0; }
+.strip { margin: 18px 0 22px; }
 
 .strip__label,
 .strip__ticks {
   font-size: 12px;
-  font-weight: 500;
-  color: var(--ink-soft);
-}
-
-.strip__bar {
-  height: 28px;
-  margin: 8px 0 6px;
-  border-radius: 14px;
-  box-shadow: inset 0 0 0 1px var(--glass-stroke);
+  color: var(--text-soft);
 }
 
 .strip__ticks {
   display: flex;
   justify-content: space-between;
+  color: var(--text-faint);
   font-variant-numeric: tabular-nums;
+}
+
+.strip__bar {
+  height: 28px;
+  margin: 8px 0 6px;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 
 /* ---- Mini timeline ---- */
 .timeline {
   margin: 20px 0 22px;
   padding: 16px 16px 18px;
-  border-radius: 18px;
-  background: var(--glass-row);
-  box-shadow: inset 0 0 0 1px var(--glass-stroke);
+  border-radius: 16px;
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 
 .timeline__label {
@@ -369,8 +394,7 @@ h3 span {
 .night-mark--moon { box-shadow: inset 0 0 0 1.2px var(--ink-soft); transform: translateX(calc(-100% - 2px)); }
 .night-mark--sun { background: var(--ink-soft); transform: translateX(2px); }
 
-/* Odometer roll for changing numbers (js/roll.js). Clipped vertically
-   only, so letter spacing and glows aren't cut */
+/* Odometer roll for changing numbers (js/roll.js) */
 .roll {
   position: relative;
   display: inline-block;
@@ -394,17 +418,26 @@ h3 span {
   padding: 0;
 }
 
-.legend li {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 10px 0;
-  font-size: 15px;
-  line-height: 1.55;
-  color: var(--ink-soft);
+.legend--grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  column-gap: 28px;
 }
 
-.legend li + li { box-shadow: 0 -1px 0 var(--glass-row); }
+@media (max-width: 560px) { .legend--grid { grid-template-columns: 1fr; } }
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-soft);
+  border-top: 1px solid var(--line);
+}
+
+.legend strong { display: block; }
 
 .lg,
 .ic {
@@ -413,11 +446,10 @@ h3 span {
   place-items: center;
   width: 32px;
   height: 32px;
-  margin-top: -3px;
   border-radius: 50%;
-  background: var(--glass);
-  box-shadow: inset 0 0 0 1px var(--glass-stroke);
-  color: var(--ink);
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--text);
   font-style: normal;
 }
 
@@ -425,9 +457,9 @@ h3 span {
 
 /* legend glyphs drawn with tokens */
 .lg--sky { background: linear-gradient(to top, var(--time-dusk), var(--temp-very-hot)); }
-.lg--height { background: linear-gradient(to right, transparent 30%, var(--ink-soft) 30% 42%, transparent 42% 58%, var(--ink-soft) 58% 70%, transparent 70%) bottom / 100% 60% no-repeat, var(--glass); }
+.lg--height { background: linear-gradient(to right, transparent 30%, var(--ink-soft) 30% 42%, transparent 42% 58%, var(--ink-soft) 58% 70%, transparent 70%) bottom / 100% 60% no-repeat, var(--panel); }
 /* moon (ring) - line - sun (dot), as under the timeline */
-.lg--night { position: relative; background: linear-gradient(var(--ink-soft), var(--ink-soft)) center / 34% 2px no-repeat, var(--glass); }
+.lg--night { position: relative; background: linear-gradient(var(--ink-soft), var(--ink-soft)) center / 34% 2px no-repeat, var(--panel); }
 .lg__moon, .lg__sun { position: absolute; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; }
 .lg__moon { left: 6px; box-shadow: inset 0 0 0 1.2px var(--ink-soft); }
 .lg__sun { right: 6px; background: var(--ink-soft); }
@@ -438,75 +470,67 @@ h3 span {
 .mk[data-kind="snow"] { flex-direction: column; align-items: center; }
 .mk[data-kind="snow"] i { width: 3px; height: 3px; border-radius: 50%; }
 
-.marks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
+/* ---- Tips ---- */
+.tips {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.mark-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  padding: 6px 11px;
-  border-radius: 12px;
-  background: var(--glass-row);
-  box-shadow: inset 0 0 0 1px var(--glass-stroke);
-  font-size: 12px;
-  line-height: 1.3;
-  color: var(--ink);
+.tips li {
+  padding: 11px 0;
+  font-size: 14px;
+  color: var(--text-soft);
+  border-top: 1px solid var(--line);
 }
 
-.mark-chip .mk { min-width: 9px; justify-content: center; color: var(--ink-soft); }
-
-/* the mark each rain / snow step gets, in the tile corner */
-.tile__mark {
-  position: absolute;
-  top: 9px;
-  right: 9px;
-  z-index: 2;
-  color: var(--tile-ink, var(--ink));
-  opacity: 0.85;
-}
+.tips li:first-child { border-top: 0; padding-top: 0; }
 
 kbd {
   display: inline-block;
   min-width: 22px;
   padding: 1px 6px;
-  border-radius: 6px;
-  background: var(--glass);
-  box-shadow: inset 0 0 0 1px var(--glass-stroke);
-  font: 600 12px 'Inter', sans-serif;
+  border-radius: 5px;
+  border: 1px solid var(--line-strong);
+  font: 500 12px 'Inter', sans-serif;
   text-align: center;
-  color: var(--ink);
+  color: var(--text);
 }
 
 @media (hover: none) { .only-keys { display: none !important; } }
 
 /* ---- Footer ---- */
 footer {
-  margin-top: 56px;
-  text-align: center;
+  margin-top: 72px;
+  padding-top: 40px;
+  border-top: 1px solid var(--line);
 }
 
-.cta {
-  display: inline-block;
-  padding: 15px 28px;
-  border-radius: 26px;
-  background: var(--glass);
-  box-shadow: inset 0 0 0 1px var(--glass-stroke-strong);
-  font-size: 15px;
-  font-weight: 600;
+.foot__btns { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
   text-decoration: none;
-  transition: background-color 0.2s ease;
+  white-space: nowrap;
+  transition: background 0.2s, transform 0.2s var(--ease);
 }
 
-.cta:hover { background: var(--glass-hover); }
+.btn:active { transform: scale(0.97); }
+.btn--light { background: var(--text); color: var(--page); }
+.btn--light:hover { background: #fff; }
+.btn--ghost { box-shadow: inset 0 0 0 1px var(--line-strong); }
+.btn--ghost:hover { background: rgba(255, 255, 255, 0.06); }
 
 footer p {
-  margin-top: 22px;
+  margin: 28px 0 0;
   font-size: 12px;
+  color: var(--text-faint);
 }
 
 /* ---- Animations (same as the app) ---- */
