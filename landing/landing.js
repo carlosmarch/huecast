@@ -76,9 +76,13 @@ function makeSky(el, { live = true, density = 1, caption = true } = {}) {
       el.style.setProperty('--sky-ink', s.ink);
       veil.style.opacity = s.cond.fx.darken || 0;
       halo.style.opacity = s.halo;
+      // keep the same sun or moon when it looks the same, so its pulses
+      // and glow don't restart
       const next = orb(s, opts.temp);
-      orbEl.replaceWith(next);
-      orbEl = next;
+      if (next.className !== orbEl.className || next.children.length !== orbEl.children.length) {
+        orbEl.replaceWith(next);
+        orbEl = next;
+      }
       if (cap) {
         cap.innerHTML = '';
         const b = document.createElement('b');
@@ -334,7 +338,7 @@ const ctaStage = $('#cta-stage');
 const ctaInner = document.querySelector('.cta__inner');
 const ctaSky = makeSky(ctaStage, { caption: false });
 const DAY_S = 36;                 // seconds for 24 hours
-const STEP_H = 0.5;               // the numbers and colours change every half hour
+const STEP_H = 0.25;              // colours change every quarter hour, numbers every half
 const SUNRISE = 7, SUNSET = 20;   // same clock day as the palette (isDayHour)
 const tempAt = h => Math.round(15 + 8 * Math.sin(((h - 9) / 24) * Math.PI * 2));
 const fmtHour = h => `${pad(Math.floor(h) % 24)}:${pad(Math.round((h % 1) * 60))}`;
@@ -345,15 +349,20 @@ function arc(h) {
   const night = 24 - SUNSET + SUNRISE;
   return ((h - SUNSET + 24) % 24) / night;
 }
+/* An orbit: the arc starts and ends below the horizon, so the sun sets
+   on the right and fades out while the moon rises from below on the left */
+const SPAN = 0.16; // how far past the horizon each end goes (x pi)
 function placeOrb(h) {
-  const p = arc(h);
-  const x = 6 + p * 88;                        // % from the left
-  const y = 70 - Math.sin(p * Math.PI) * 54;   // % from the top: horizon 70%, peak 16%
+  const a = (-SPAN + arc(h) * (1 + 2 * SPAN)) * Math.PI;
+  const x = 50 - Math.cos(a) * 46;     // % from the left
+  const y = 70 - Math.sin(a) * 56;     // % from the top: horizon at 70%
+  const fade = clamp((y - 70) / 26, 0, 1);
   ctaStage.style.setProperty('--ox', `${x.toFixed(2)}%`);
   ctaStage.style.setProperty('--oy', `${y.toFixed(2)}%`);
+  ctaStage.style.setProperty('--oo', (1 - fade * fade * (3 - 2 * fade)).toFixed(3));
 }
 
-let ctaStep = null;
+let ctaStep = null, ctaShown = null;
 function ctaShow(h, dir) {
   const step = Math.floor(h / STEP_H) * STEP_H;
   if (step === ctaStep) return;
@@ -361,8 +370,11 @@ function ctaShow(h, dir) {
   const temp = tempAt(step);
   const s = ctaSky.show({ hour: step, temp, code: 0, wind: 4 });
   ctaInner.style.setProperty('--cta-ink', s.ink);
-  rollText($('#cta-time'), fmtHour(step), dir);
-  rollText($('#cta-temp'), `${temp}°`, dir);
+  const shown = Math.floor(step * 2) / 2;
+  if (shown === ctaShown) return;
+  ctaShown = shown;
+  rollText($('#cta-time'), fmtHour(shown), dir);
+  rollText($('#cta-temp'), `${tempAt(shown)}°`, dir);
   rollText($('#cta-label'), s.isDay ? 'Clear' : 'Clear night', 0);
 }
 
