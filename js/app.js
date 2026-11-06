@@ -76,10 +76,18 @@ const state = {
    ====================================================================== */
 init();
 
+/* Opening the app (not the landing page's preview of it) means / skips
+   the landing page from now on - see the check in index.html */
+function rememberVisit() {
+  if (window.top !== window) return;
+  try { localStorage.setItem('tc-seen', '1'); } catch {}
+}
+
 function init() {
   bindUI();
   fitScreen();
   registerServiceWorker();
+  rememberVisit();
 
   const params = new URLSearchParams(location.search);
   const wallpaper = params.get('wallpaper');

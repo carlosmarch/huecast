@@ -12,6 +12,23 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Huecast">
 
+  <script>
+    /* First visit: show the landing page. Once someone has opened the app
+       (tc-seen, or pins / a last place from before), / goes straight to the
+       app. Links with a query (shared places, ?wallpaper, ?demo), the
+       installed app and the landing page's own preview never redirect. */
+    (function () {
+      try {
+        if (location.search || window.top !== window) return;
+        if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) return;
+        var ls = localStorage;
+        if (ls.getItem('tc-seen') || ls.getItem('tc-place') || ls.getItem('tc-pins')) return;
+        ls.setItem('tc-probe', '1'); ls.removeItem('tc-probe'); // storage works: no loop
+        location.replace('landing/');
+      } catch (e) {}
+    })();
+  </script>
+
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
