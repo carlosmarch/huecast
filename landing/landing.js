@@ -327,7 +327,63 @@ for (const sw of document.querySelectorAll('[data-sky]')) {
   sw.style.background = `linear-gradient(-65deg, ${s.timeColor}, ${s.tempColor})`;
 }
 
-makeSky($('#cta-stage'), { caption: false }).show({ hour: 22.5, temp: 15, code: 0, wind: 4 });
+/* CTA: a whole day on a loop. The sky colours follow the hour, the sun
+   (by day) and the moon (by night) cross the sky from left to right on an
+   arc, and the time and temperature roll as they change. */
+const ctaStage = $('#cta-stage');
+const ctaInner = document.querySelector('.cta__inner');
+const ctaSky = makeSky(ctaStage, { caption: false });
+const DAY_S = 36;                 // seconds for 24 hours
+const STEP_H = 0.5;               // the numbers and colours change every half hour
+const SUNRISE = 7, SUNSET = 20;   // same clock day as the palette (isDayHour)
+const tempAt = h => Math.round(15 + 8 * Math.sin(((h - 9) / 24) * Math.PI * 2));
+const fmtHour = h => `${pad(Math.floor(h) % 24)}:${pad(Math.round((h % 1) * 60))}`;
+
+/* 0..1 across the sun's arc by day, or the moon's by night */
+function arc(h) {
+  if (h >= SUNRISE && h < SUNSET) return (h - SUNRISE) / (SUNSET - SUNRISE);
+  const night = 24 - SUNSET + SUNRISE;
+  return ((h - SUNSET + 24) % 24) / night;
+}
+function placeOrb(h) {
+  const p = arc(h);
+  const x = 6 + p * 88;                        // % from the left
+  const y = 70 - Math.sin(p * Math.PI) * 54;   // % from the top: horizon 70%, peak 16%
+  ctaStage.style.setProperty('--ox', `${x.toFixed(2)}%`);
+  ctaStage.style.setProperty('--oy', `${y.toFixed(2)}%`);
+}
+
+let ctaStep = null;
+function ctaShow(h, dir) {
+  const step = Math.floor(h / STEP_H) * STEP_H;
+  if (step === ctaStep) return;
+  ctaStep = step;
+  const temp = tempAt(step);
+  const s = ctaSky.show({ hour: step, temp, code: 0, wind: 4 });
+  ctaInner.style.setProperty('--cta-ink', s.ink);
+  rollText($('#cta-time'), fmtHour(step), dir);
+  rollText($('#cta-temp'), `${temp}°`, dir);
+  rollText($('#cta-label'), s.isDay ? 'Clear' : 'Clear night', 0);
+}
+
+let ctaHour = 18.5, ctaLast = 0, ctaRaf = 0;
+function ctaFrame(t) {
+  const dt = ctaLast ? Math.min((t - ctaLast) / 1000, 0.1) : 0;
+  ctaLast = t;
+  ctaHour = (ctaHour + (dt * 24) / DAY_S) % 24;
+  placeOrb(ctaHour);
+  ctaShow(ctaHour, 1);
+  ctaRaf = requestAnimationFrame(ctaFrame);
+}
+placeOrb(ctaHour);
+ctaShow(ctaHour, 0);
+if (!reduceMotion.matches) {
+  new IntersectionObserver(([e]) => {
+    cancelAnimationFrame(ctaRaf);
+    ctaLast = 0;
+    if (e.isIntersecting) ctaRaf = requestAnimationFrame(ctaFrame);
+  }).observe(ctaStage);
+}
 
 /* ======================================================================
    Reveal sections as they scroll in
