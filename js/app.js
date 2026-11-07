@@ -41,6 +41,8 @@ const el = {
   retry: $('#retry'),
   menu: $('#menu'),
   sheet: $('#sheet'),
+  days: $('#days'),
+  daysList: $('#days-list'),
   menuBtn: $('#btn-menu'),
   search: $('#search'),
   searchForm: $('#search-form'),
@@ -58,7 +60,8 @@ const scene = createScene($('.scene'), () => {
 
 const state = {
   place: null,     // { lat, lon, label }
-  forecast: null,  // { offset, hours[] }
+  forecast: null,  // { offset, hours[] on the timeline, next[] (24 h from now), days[] }
+  viewDay: null,   // the day on the timeline (its start time), null for the next 24 hours
   selected: 0,
   unit: loadUnit(),
   skyIndex: 0,
@@ -163,6 +166,8 @@ async function loadPlace(place, { share = true, remember = false } = {}) {
   try {
     place.label = label || formatCoords(place);
     state.forecast = forecast;
+    state.viewDay = null;
+    applyView(forecast);
     state.selected = 0;
     if (remember) savePlace(place);
     setLoading(false);
@@ -184,6 +189,7 @@ function scheduleRefresh() {
     getForecast(place.lat, place.lon).then(f => {
       if (state.place !== place) return;
       state.forecast = f;
+      applyView(f);
       state.selected = Math.min(state.selected, f.hours.length - 1);
       buildTimeline();
       render();
@@ -510,6 +516,95 @@ function indexFromPointer(e) {
 }
 
 /* ======================================================================
+   NEXT DAYS: long press the timeline for a sheet with one small timeline
+   per day; picking one puts that day's 24 hours on the timeline
+   ====================================================================== */
+function hasDays() {
+  return !state.demo && !!state.forecast?.days?.length;
+}
+
+/* Point the timeline at the next 24 hours or at the day being viewed
+   (kept across refreshes; back to the next 24 hours once it's gone) */
+function applyView(f) {
+  if (!f.next) f.next = f.hours;
+  const day = state.viewDay !== null && f.days?.find(d => d.time === state.viewDay);
+  if (!day) state.viewDay = null;
+  f.hours = day ? day.hours : f.next;
+}
+
+function showDay(time) {
+  const f = state.forecast;
+  if (!f || time === state.viewDay) return;
+  state.viewDay = time;
+  applyView(f);
+  // a day opens at midday (or the first hour of light), the next 24 hours at now
+  const noon = f.hours.findIndex(h => new Date((h.time + f.offset) * 1000).getUTCHours() === 12);
+  state.selected = state.viewDay === null ? 0 : Math.max(0, noon);
+  state.rollDir = 0;
+  state.lastKey = '';
+  buildTimeline();
+  render();
+  if (state.viewDay !== null) {
+    const d = new Date((time + f.offset) * 1000);
+    toast(`${DAYS[d.getUTCDay()]} · hold to go back`, 2500);
+  }
+}
+
+function openDays() {
+  if (!hasDays() || !el.days.hidden) return;
+  closeMenu();
+  renderDays();
+  el.days.hidden = false;
+  (el.daysList.querySelector('[aria-current="true"]') || el.daysList.querySelector('.day'))?.focus({ preventScroll: true });
+}
+
+function closeDays() {
+  el.days.hidden = true;
+}
+
+function renderDays() {
+  const { next, days, offset, daylight } = state.forecast;
+  const now = next[0];
+  const rows = [
+    { time: '', name: 'Next 24 hours', note: getCondition(now.code, now.wind, now.data).label, hours: next },
+    ...days.map((d, i) => {
+      const local = new Date((d.time + offset) * 1000);
+      const date = `${local.getUTCDate()} ${MONTHS[local.getUTCMonth()]}`;
+      const cond = typeof d.code === 'number' ? getCondition(d.code).label : '';
+      return {
+        time: d.time,
+        name: i === 0 ? 'Tomorrow' : DAYS[local.getUTCDay()],
+        note: [date, cond].filter(Boolean).join(' · '),
+        hours: d.hours,
+        min: d.min, max: d.max,
+      };
+    }),
+  ];
+  // one scale for every row, so the days can be compared
+  const temps = rows.flatMap(r => r.hours.map(h => h.temp));
+  const lo = Math.min(...temps), range = Math.max(Math.max(...temps) - lo, 4);
+  const current = state.viewDay ?? '';
+
+  el.daysList.innerHTML = rows.map(r => {
+    const ts = r.hours.map(h => h.temp);
+    const min = typeof r.min === 'number' ? r.min : Math.min(...ts);
+    const max = typeof r.max === 'number' ? r.max : Math.max(...ts);
+    const bars = r.hours.map(h => {
+      const { timeColor, tempColor } = skyFor(h, offset, daylight);
+      const height = 18 + ((h.temp - lo) / range) * 82;
+      return `<i style="height:${height.toFixed(1)}%;background:linear-gradient(to top, ${timeColor}, ${tempColor})"></i>`;
+    }).join('');
+    const note = r.note.charAt(0).toUpperCase() + r.note.slice(1);
+    return `<button type="button" class="day" data-day="${r.time}" aria-current="${r.time === current}"
+      aria-label="${esc(`${r.name}, ${note}, low ${toUnit(min)}, high ${toUnit(max)}`)}">
+      <span class="day__name">${esc(r.name)}<small>${esc(note)}</small></span>
+      <span class="day__bars" aria-hidden="true">${bars}</span>
+      <span class="day__temps" aria-hidden="true">${toUnit(min)}° <b>${toUnit(max)}°</b></span>
+    </button>`;
+  }).join('');
+}
+
+/* ======================================================================
    UI EVENTS
    ====================================================================== */
 function bindUI() {
@@ -577,6 +672,47 @@ function bindUI() {
   el.track.addEventListener('pointerup', stop);
   el.track.addEventListener('pointercancel', stop);
 
+  // Long press the timeline (or right click) for the next days. The press
+  // has already moved the sky to the hour under the finger: put it back
+  let holdTimer = 0, holdStart = null, before = 0;
+  const unhold = () => { clearTimeout(holdTimer); holdStart = null; };
+  // lifting the finger that opened the sheet clicks whatever is under it now
+  let swallow = false;
+  const hold = pressed => {
+    unhold();
+    if (pressed) swallow = true;
+    if (pressed) window.addEventListener('pointerup', () => setTimeout(() => { swallow = false; }, 350), { once: true, capture: true });
+    dragging = false;
+    shrink();
+    if (state.forecast && state.selected !== before) select(before);
+    openDays();
+  };
+  el.timeline.addEventListener('pointerdown', e => {
+    unhold();
+    before = state.selected;
+    if (e.button || !e.isPrimary || !hasDays()) return;
+    holdStart = { x: e.clientX, y: e.clientY };
+    holdTimer = setTimeout(() => { navigator.vibrate?.(10); hold(true); }, 550);
+  }, true);
+  el.timeline.addEventListener('pointermove', e => {
+    if (holdStart && Math.hypot(e.clientX - holdStart.x, e.clientY - holdStart.y) > 10) unhold();
+  });
+  for (const type of ['pointerup', 'pointercancel']) el.timeline.addEventListener(type, unhold);
+  el.timeline.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    // touch browsers fire it during a long press, desktops on a right click
+    if (hasDays() && el.days.hidden) hold(!!holdStart);
+  });
+
+  el.days.addEventListener('click', e => {
+    if (swallow) return;
+    if (e.target.closest('[data-close]')) return closeDays();
+    const row = e.target.closest('[data-day]');
+    if (!row) return;
+    closeDays();
+    showDay(row.dataset.day === '' ? null : +row.dataset.day);
+  });
+
   el.track.addEventListener('keydown', e => {
     if (!state.forecast) return;
     const keys = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 };
@@ -590,7 +726,7 @@ function bindUI() {
   // Tap the screen (not a control) to hide / show the top buttons and the
   // low · now · high row; a tap that closes the menu or search doesn't count
   let overlayOpen = false;
-  const anyOpen = () => !el.menu.hidden || !el.search.hidden || !el.sheet.hidden;
+  const anyOpen = () => !el.menu.hidden || !el.search.hidden || !el.sheet.hidden || !el.days.hidden;
   const controls = 'button, a, input, .timeline, .menu, .search, .sheet, .toast, .retry';
   el.app.addEventListener('pointerdown', () => { overlayOpen = anyOpen(); }, true);
   el.app.addEventListener('click', e => {
@@ -632,6 +768,10 @@ function bindUI() {
     }
     if (!el.sheet.hidden) {
       if (e.key === 'Escape') { closeSheet(); $('#btn-random').focus({ preventScroll: true }); }
+      return;
+    }
+    if (!el.days.hidden) {
+      if (e.key === 'Escape') { closeDays(); el.track.focus({ preventScroll: true }); }
       return;
     }
     if (e.target.closest('input, [role="slider"]')) return;
@@ -930,6 +1070,7 @@ function bindMenu() {
   $('#menu-scene').addEventListener('click', () => { closeMenu(); saveScene(); });
   $('#menu-share').addEventListener('click', () => { closeMenu(); share(); });
   $('#menu-wallpaper').addEventListener('click', () => setWallpaper(''));
+  $('#menu-days').addEventListener('click', () => { closeMenu(); openDays(); });
   $('#menu-pin').addEventListener('click', () => {
     const place = currentPlace();
     if (!place) return;
@@ -945,6 +1086,7 @@ function bindMenu() {
 /* The options menu's keys, shown next to each item */
 const menuKeys = {
   l: () => $('#menu-locate').click(),
+  n: () => openDays(),
   w: () => setWallpaper(state.wallpaper === '' ? null : ''),
   p: () => menuAction('#menu-pin'),
   s: () => menuAction('#menu-scene'),
@@ -1002,6 +1144,7 @@ function syncMenu() {
   $('#menu-save').disabled = !ready;
   $('#menu-scene').disabled = !ready;
   $('#menu-share').disabled = !ready;
+  $('#menu-days').disabled = !hasDays();
 }
 
 function setUnit(unit) {
@@ -1033,7 +1176,9 @@ function shareLink() {
 function shareText() {
   const h = state.forecast.hours[state.selected];
   const cond = state.sky?.label || '';
-  const when = h.isNow ? '' : ` at ${el.label.dataset.text?.split(' · ')[0] || ''}`;
+  const at = el.label.dataset.text?.split(' · ')[0] || '';
+  const day = state.viewDay === null ? '' : ` on ${el.date.dataset.text?.split(',')[0] || ''}`;
+  const when = h.isNow ? '' : ` at ${at}${day}`;
   return `${cond.charAt(0).toUpperCase() + cond.slice(1)}, ${toUnit(h.temp)}°${state.unit} in ${state.place.label}${when}`;
 }
 
@@ -1100,7 +1245,8 @@ function saveScene() {
 // The forecast as saved: "now" becomes the moment it was saved
 function frozenForecast() {
   const saved = Math.floor(Date.now() / 1000);
-  return { ...state.forecast, hours: state.forecast.hours.map(({ isNow, ...h }) => (isNow ? { ...h, time: saved } : h)) };
+  const { next, days, ...forecast } = state.forecast; // only the hours on the timeline
+  return { ...forecast, hours: forecast.hours.map(({ isNow, ...h }) => (isNow ? { ...h, time: saved } : h)) };
 }
 
 function openScene({ forecast, selected = 0, label }) {
@@ -1213,8 +1359,10 @@ function showScene({ forecast, selected, label, saved }) {
   el.domlog.hidden = true;
   state.place = { lat: 0, lon: 0, label };
   state.forecast = forecast;
+  state.viewDay = null;
   state.selected = selected;
   state.lastKey = '';
+  closeDays();
   el.retry.hidden = true;
   buildTimeline();
   render();

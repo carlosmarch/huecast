@@ -20,7 +20,7 @@ The 2016 data visualization weather app (then called Timecast), rebuilt for 2026
 | Dependencies | jQuery, animate.css | none, plain ES modules |
 | Gradient | hard colour buckets | the same colours, blended smoothly |
 | Time of day | device clock | **the location's local time**, with colours that follow the real sunrise and sunset |
-| Forecast | – | **24-hour timeline**: drag to watch the sky change hour by hour |
+| Forecast | – | **24-hour timeline**: drag to watch the sky change hour by hour; hold it for the **next 7 days** |
 | Temperature | hidden | shown, with "feels like" in the forecast bar; tap to switch °C/°F |
 | Explore | – | in search: the coldest, hottest, wettest, snowiest, stormiest, foggiest and windiest places right now, and where it's golden hour; the dice opens one of them |
 | Keep | – | **pin** places to the top of search, **save a scene** (place, hour and its 24-hour forecast) to open again later, save the screen as a picture |
