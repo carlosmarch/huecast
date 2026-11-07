@@ -4,6 +4,10 @@
 
 **Live:** https://huecast.app/
 
+<img src="screenshots/landing.png" width="100%" alt="The Huecast landing page">
+
+Full page: [screenshots/landing-full.jpg](screenshots/landing-full.jpg)
+
 The 2016 data visualization weather app (then called Timecast), rebuilt for 2026. It keeps the same idea: one circle (sun or moon), a gradient made from **temperature × time of day**, and the weather drawn as particles (rain, snow, fog, cloud bands, stars, thunder).
 
 ## What's new
