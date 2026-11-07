@@ -57,7 +57,7 @@ Geolocation needs `localhost` or HTTPS.
 ```
 index.html
 how.html          "How it works", drawn with the app's own code
-landing/          marketing landing page (/landing/), outside the app, drawn with the app's own sky engine
+product/          marketing landing page (/product/), outside the app, drawn with the app's own sky engine
 css/tokens.css    colours, shared by the CSS and the JS
 css/style.css
 css/how.css
