@@ -74,6 +74,11 @@
       <span>Use my location</span>
       <kbd class="menu__key" aria-hidden="true">L</kbd>
     </button>
+    <button class="menu__item" id="menu-days" type="button" role="menuitem">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M7.5 17v-2.5M12 17v-4M16.5 17v-1.5"/></svg>
+      <span>Next days</span>
+      <kbd class="menu__key" aria-hidden="true">N</kbd>
+    </button>
     <button class="menu__item" id="menu-wallpaper" type="button" role="menuitem">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M9 20h6M12 16.5V20"/><circle cx="12" cy="10.5" r="2.5"/></svg>
       <span>Wallpaper</span>
@@ -139,7 +144,7 @@
       <span class="timeline__range" id="timeline-high"></span>
     </div>
     <div class="timeline__track" id="timeline-track" role="slider" tabindex="0"
-         aria-label="Forecast hour" aria-valuemin="0" aria-valuemax="24" aria-valuenow="0"></div>
+         aria-label="Forecast hour" aria-description="Hold for the next days" aria-valuemin="0" aria-valuemax="24" aria-valuenow="0"></div>
     <div class="timeline__night" id="timeline-night" aria-hidden="true"></div>
   </footer>
 
@@ -163,6 +168,15 @@
       <div class="sheet__grip" aria-hidden="true"></div>
       <h2 class="sheet__title" id="sheet-title">Random extreme</h2>
       <div class="sheet__options" id="sheet-options"></div>
+    </div>
+  </div>
+
+  <div class="sheet" id="days" hidden>
+    <div class="sheet__backdrop" data-close></div>
+    <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="days-title">
+      <div class="sheet__grip" aria-hidden="true"></div>
+      <h2 class="sheet__title" id="days-title">Next days</h2>
+      <div class="days" id="days-list"></div>
     </div>
   </div>
 

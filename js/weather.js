@@ -15,8 +15,8 @@ export async function getForecast(lat, lon) {
     current: 'temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m',
     hourly: 'temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,wind_gusts_10m,rain,showers,snowfall,visibility,' +
       'cloud_cover,cloud_cover_low,cloud_cover_mid',
-    daily: 'sunrise,sunset',
-    forecast_days: 2,
+    daily: 'sunrise,sunset,temperature_2m_min,temperature_2m_max,weather_code',
+    forecast_days: 7,
     timezone: 'auto',
     timeformat: 'unixtime',
   });
@@ -52,22 +52,44 @@ export async function getForecast(lat, lon) {
     data: nowRow >= 0 ? amounts(nowRow) : {},
   };
 
+  const hour = i => ({
+    time: h.time[i],
+    temp: h.temperature_2m[i],
+    feels: at('apparent_temperature', i),
+    code: h.weather_code[i],
+    isDay: !!h.is_day[i],
+    wind: h.wind_speed_10m[i],
+    data: amounts(i),
+  });
+
   // Next 24 hours, starting with the current conditions
   const hours = [{ ...now, isNow: true }];
   for (let i = 0; i < h.time.length && hours.length < 25; i++) {
-    if (h.time[i] <= c.time) continue;
-    hours.push({
-      time: h.time[i],
-      temp: h.temperature_2m[i],
-      feels: at('apparent_temperature', i),
-      code: h.weather_code[i],
-      isDay: !!h.is_day[i],
-      wind: h.wind_speed_10m[i],
-      data: amounts(i),
-    });
+    if (h.time[i] > c.time) hours.push(hour(i));
   }
 
-  return { offset, hours, daylight: daylight(data.daily) };
+  return { offset, hours, days: days(data.daily, h, offset, hour), daylight: daylight(data.daily) };
+}
+
+/* The coming days after today, each with its 24 local hours (00-23):
+   [{ time, min, max, code, hours[] }]. Days missing hours are left out
+   (clock changes give 23 or 25) */
+function days(d, h, offset, hour) {
+  if (!d || !Array.isArray(d.time)) return [];
+  const dayOf = t => Math.floor((t + offset) / 86400);
+  const byDay = new Map();
+  h.time.forEach((t, i) => {
+    const k = dayOf(t);
+    if (!byDay.has(k)) byDay.set(k, []);
+    byDay.get(k).push(hour(i));
+  });
+  return d.time.slice(1).map((t, j) => ({
+    time: t,
+    min: d.temperature_2m_min?.[j + 1],
+    max: d.temperature_2m_max?.[j + 1],
+    code: d.weather_code?.[j + 1],
+    hours: byDay.get(dayOf(t)) || [],
+  })).filter(day => day.hours.length >= 23);
 }
 
 /* Low and mid cloud: the layers that grey the sky (high cloud is thin) */
