@@ -2,7 +2,7 @@
 
 # Huecast
 
-**Live:** https://huecast.netlify.app/
+**Live:** https://huecast.app/
 
 <img src="screenshots/landing.png" width="100%" alt="The Huecast landing page">
 
