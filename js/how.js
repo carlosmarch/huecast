@@ -1,7 +1,7 @@
 /* "How it works" page: every demo is drawn with the app's own code
    (palette, conditions, scene), so it always matches the app. */
 
-import { colorByCelsius, colorByHour, skyColors, mix, luminance, sunIntensity, starsByHour, isDayHour, SUN_STEPS, token } from './palette.js';
+import { colorByCelsius, colorByHour, skyColors, mix, luminance, sunIntensity, starsByHour, isDayHour, SUN_STEPS, token, skyGradient } from './palette.js';
 import { getCondition, weatherMarks, iceHalo, STEPS, CALM_WIND } from './conditions.js';
 import { createScene } from './scene.js';
 import { rollText } from './roll.js';
@@ -26,8 +26,7 @@ function sky(hour, temp, code = 0, wind = 10, data = {}, isDay = isDayHour(hour)
 }
 
 function gradient(el, angle, from, to) {
-  el.style.background = `linear-gradient(${angle}, ${from}, ${to})`;
-  el.style.background = `linear-gradient(${angle} in oklch, ${from}, ${to})`;
+  el.style.background = skyGradient(angle, from, to);
 }
 
 /* mini sun or moon, drawn like the app's */
