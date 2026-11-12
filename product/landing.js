@@ -1,7 +1,7 @@
 /* Huecast landing page. Every sky here is drawn with the app's own code
    (palette, conditions, scene), so the page always matches the app. */
 
-import { colorByCelsius, colorByHour, skyColors, mix, luminance, sunIntensity, starsByHour, isDayHour, token } from '../js/palette.js';
+import { colorByCelsius, colorByHour, skyColors, mix, luminance, sunIntensity, starsByHour, isDayHour, token, skyGradient } from '../js/palette.js';
 import { getCondition, weatherMarks, iceHalo } from '../js/conditions.js';
 import { createScene } from '../js/scene.js';
 import { rollText } from '../js/roll.js';
@@ -250,7 +250,7 @@ day.forEach(([hour, code, temp], i) => {
   const bar = document.createElement('div');
   bar.className = 'bar';
   bar.style.height = `${18 + ((temp - tlow) / (thigh - tlow)) * 82}%`;
-  bar.style.background = `linear-gradient(to top, ${s.timeColor}, ${s.tempColor})`;
+  bar.style.background = skyGradient('to top', s.timeColor, s.tempColor, 3);
   const marks = weatherMarks(s.cond.levels);
   if (marks) {
     const wx = document.createElement('span');
@@ -328,7 +328,7 @@ for (const x of EXTREMES) {
 for (const sw of document.querySelectorAll('[data-sky]')) {
   const [hour, temp] = sw.dataset.sky.split(' ').map(Number);
   const s = skyFor({ hour, temp });
-  sw.style.background = `linear-gradient(-65deg, ${s.timeColor}, ${s.tempColor})`;
+  sw.style.background = skyGradient('-65deg', s.timeColor, s.tempColor);
 }
 
 /* CTA: a whole day on a loop. The sky colours follow the hour, the sun

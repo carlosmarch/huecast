@@ -8,7 +8,7 @@
 
 import { getForecast, getNowMany, reverseGeocode, searchCity, getPosition } from './weather.js';
 import { getCondition, weatherMarks, iceHalo, CODES } from './conditions.js';
-import { skyColors, skyHour, sunIntensity, starsByHour, isDayHour, luminance, mix } from './palette.js';
+import { skyColors, skyHour, sunIntensity, starsByHour, isDayHour, luminance, mix, skyGradient } from './palette.js';
 import { createScene } from './scene.js';
 import { rollText } from './roll.js';
 import { renderPicture } from './picture.js';
@@ -277,9 +277,7 @@ function skyFor(h, offset, daylight) {
 }
 
 function gradient(el, angle, from, to) {
-  el.style.background = `linear-gradient(${angle}, ${from}, ${to})`;
-  // perceptual blend where supported; ignored by older browsers
-  el.style.background = `linear-gradient(${angle} in oklch, ${from}, ${to})`;
+  el.style.background = skyGradient(angle, from, to);
 }
 
 function paintSky(timeColor, tempColor) {
@@ -592,7 +590,7 @@ function renderDays() {
     const bars = r.hours.map(h => {
       const { timeColor, tempColor } = skyFor(h, offset, daylight);
       const height = 18 + ((h.temp - lo) / range) * 82;
-      return `<i style="height:${height.toFixed(1)}%;background:linear-gradient(to top, ${timeColor}, ${tempColor})"></i>`;
+      return `<i style="height:${height.toFixed(1)}%;background:${skyGradient('to top', timeColor, tempColor, 3)}"></i>`;
     }).join('');
     const note = r.note.charAt(0).toUpperCase() + r.note.slice(1);
     return `<button type="button" class="day" data-day="${r.time}" aria-current="${r.time === current}"
@@ -1015,7 +1013,7 @@ function renderSearch(list = null, empty = 'No cities found') {
     // saved pictures show their sky
     const hex = c => (/^#[0-9a-f]{6}$/i.test(c || '') ? c : null);
     const sky = hex(place.from) && hex(place.to)
-      ? `<i class="place__sky" style="background:linear-gradient(-65deg, ${hex(place.from)}, ${hex(place.to)})"></i>` : '';
+      ? `<i class="place__sky" style="background:${skyGradient('-65deg', hex(place.from), hex(place.to), 4)}"></i>` : '';
     return `<li class="place">
       <button type="button" class="place__go" data-go="${i}">${sky}<span>${esc(place.name)}<small>${esc([place.note, place.region].filter(Boolean).join(' · '))}</small></span></button>
       <button type="button" class="place__pin" data-pin="${i}" aria-pressed="${pinned}" aria-label="${pinned ? 'Unpin' : 'Pin'} ${esc(place.name)}" title="${pinned ? 'Unpin' : 'Pin'}">${ICON_PIN}</button>

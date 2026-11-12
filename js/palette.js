@@ -20,17 +20,17 @@ const TEMP_STOPS = [
 
 // [sky hour, colour token] (cyclic). Sky hours put sunrise at 07:00 and
 // sunset at 20:00 (see skyHour), so the stops are placed around the sun:
-// dawn at sunrise, full daylight held through the afternoon, the dusk
-// colour at sunset and the dark evening only after it
+// dawn at sunrise, blue daylight held through the afternoon, a dusky
+// rose at sunset, then a navy evening and night
 const TIME_STOPS = [
   [3,    '--time-night'],
-  [7,    '--time-dawn'],    // sunrise
+  [7,    '--time-dawn'],      // sunrise
   [9.5,  '--time-morning'],
   [13,   '--time-noon'],
-  [17.5, '--time-noon'],    // afternoon stays bright
-  [20,   '--time-dusk'],    // sunset
+  [17.5, '--time-noon'],      // afternoon stays bright
+  [20,   '--time-dusk'],      // sunset
   [22,   '--time-evening'],
-  [27,   '--time-night'],   // = 3h next day
+  [27,   '--time-night'],     // = 3h next day
 ];
 
 /* Colour tokens live in css/tokens.css; read them once */
@@ -79,10 +79,15 @@ export function lift(hex, amount) {
 
 /* The two sky colours for an hour: time of day and temperature, adjusted
    for night and weather. Shared by the app, the picture and the info page */
+const TEMP_TINT = 0.4;
+
 export function skyColors({ hour, temp, isDay, fx }) {
   const hourColor = colorByHour(hour);
   let tempColor = colorByCelsius(temp);
   if (!isDay) tempColor = nightShade(tempColor, hourColor, 0.55);
+  // the sky leads: temperature only tints it, so a screen keeps to one
+  // colour family instead of two competing ones
+  tempColor = mix(hourColor, tempColor, TEMP_TINT);
   const timeColor = desaturate(hourColor, fx.sat);
   tempColor = desaturate(tempColor, fx.sat);
   // snow brightens the sky (less so at night)
@@ -155,7 +160,34 @@ export function mix(a, b, t = 0.5) {
   let dh = hb - ha;
   if (dh > 180) dh -= 360;
   if (dh < -180) dh += 360;
+  // far-apart hues (a blue sky and a warm temperature) would sweep a
+  // rainbow, or pass through green: blend straight across (OKLab) instead,
+  // through a soft haze, so a sky shows two colours, not five
+  if (Math.min(c1, c2) >= 0.02 && (Math.abs(dh) > 90 || crossesGreen(ha, dh))) return mixLab([l1, c1, h1], [l2, c2, h2], t);
   return oklchToHex([l1 + (l2 - l1) * t, c1 + (c2 - c1) * t, ha + dh * t]);
+}
+
+function mixLab([l1, c1, h1], [l2, c2, h2], t) {
+  const r = Math.PI / 180;
+  const a = c1 * Math.cos(h1 * r) * (1 - t) + c2 * Math.cos(h2 * r) * t;
+  const b = c1 * Math.sin(h1 * r) * (1 - t) + c2 * Math.sin(h2 * r) * t;
+  return oklchToHex([l1 + (l2 - l1) * t, Math.hypot(a, b), (Math.atan2(b, a) / r + 360) % 360]);
+}
+
+const GREEN = [125, 195]; // OKLCH hues between yellow and sky blue
+function crossesGreen(h, dh) {
+  for (let i = 1; i < 8; i++) {
+    const x = ((h + dh * i / 8) % 360 + 360) % 360;
+    if (x > GREEN[0] && x < GREEN[1]) return true;
+  }
+  return false;
+}
+
+/* A CSS gradient between two sky colours, with the in-between stops
+   worked out by mix() so every browser shows the same blend */
+export function skyGradient(angle, from, to, steps = 6) {
+  const stops = Array.from({ length: steps + 1 }, (_, i) => mix(from, to, i / steps));
+  return `linear-gradient(${angle}, ${stops.join(', ')})`;
 }
 
 export function hexToRgb(hex) {
