@@ -18,15 +18,19 @@ const TEMP_STOPS = [
   [35,   '--temp-damn-hot'],
 ];
 
-// [hour, colour token] - midpoints of the original time-of-day buckets (cyclic)
+// [sky hour, colour token] (cyclic). Sky hours put sunrise at 07:00 and
+// sunset at 20:00 (see skyHour), so the stops are placed around the sun:
+// dawn at sunrise, full daylight held through the afternoon, the dusk
+// colour at sunset and the dark evening only after it
 const TIME_STOPS = [
   [3,    '--time-night'],
-  [7.5,  '--time-dawn'],
-  [10.5, '--time-morning'],
-  [14,   '--time-noon'],
-  [17.5, '--time-dusk'],
-  [21.5, '--time-evening'],
-  [27,   '--time-night'], // = 3h next day
+  [7,    '--time-dawn'],    // sunrise
+  [9.5,  '--time-morning'],
+  [13,   '--time-noon'],
+  [17.5, '--time-noon'],    // afternoon stays bright
+  [20,   '--time-dusk'],    // sunset
+  [22,   '--time-evening'],
+  [27,   '--time-night'],   // = 3h next day
 ];
 
 /* Colour tokens live in css/tokens.css; read them once */

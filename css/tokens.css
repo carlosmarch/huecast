@@ -8,11 +8,11 @@
 :root {
   /* ---- Sky palette: time of day (original 2016 colours) ---- */
   --time-night:   #000000; /* ~03:00 */
-  --time-dawn:    #563761; /* ~07:30 */
-  --time-morning: #F5FFAE; /* ~10:30 */
-  --time-noon:    #FFB400; /* ~14:00 */
-  --time-dusk:    #56132A; /* ~17:30 */
-  --time-evening: #1F1F1F; /* ~21:30 */
+  --time-dawn:    #563761; /* sunrise */
+  --time-morning: #F5FFAE; /* ~09:30 */
+  --time-noon:    #FFB400; /* ~13:00-17:30 */
+  --time-dusk:    #56132A; /* sunset */
+  --time-evening: #1F1F1F; /* ~22:00 */
 
   /* ---- Sky palette: temperature ----
      Below 8°: ice scale, colder is deeper blue, 0° is frost.
