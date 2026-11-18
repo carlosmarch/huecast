@@ -130,7 +130,7 @@ code { font-size: 0.92em; padding: 1px 5px; border-radius: 4px; background: rgba
 }
 
 /* ---- Hero ---- */
-.hero { padding-top: 88px; }
+.hero { padding-top: 88px; overflow-x: clip; } /* the angled window can poke past the edges */
 
 .hero__title {
   margin: 0;
@@ -182,14 +182,34 @@ code { font-size: 0.92em; padding: 1px 5px; border-radius: 4px; background: rgba
 
 /* the real app, in a window */
 .window {
+  /* --p goes 1 → 0 as the window scrolls into view (set in landing.js):
+     at 1 the screen leans back like a laptop lid, at 0 it faces you */
+  --p: 1;
   position: relative;
   border-radius: 14px;
   background: var(--panel);
-  box-shadow: 0 0 0 1px var(--line-strong), 0 40px 120px -20px rgba(0, 0, 0, 0.8);
+  box-shadow:
+    0 0 0 1px var(--line-strong),
+    0 calc(40px + var(--p) * 30px) calc(120px + var(--p) * 40px) -20px rgba(0, 0, 0, 0.85);
   overflow: hidden;
-  transform: perspective(1800px) rotateX(var(--tilt, 0deg));
-  transform-origin: top center;
-  transition: transform 0.2s linear;
+  transform:
+    perspective(1100px)
+    rotateX(calc(var(--p) * 24deg))
+    scale(calc(1 - var(--p) * 0.1));
+  transform-origin: 50% 0%;
+  will-change: transform;
+}
+
+/* light catching the glass while it is angled */
+.window::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(170deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 45%);
+  opacity: var(--p);
 }
 
 .window::after {
@@ -198,7 +218,7 @@ code { font-size: 0.92em; padding: 1px 5px; border-radius: 4px; background: rgba
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, calc(0.08 + var(--p) * 0.14));
 }
 
 .window__bar {
@@ -814,5 +834,5 @@ code { font-size: 0.92em; padding: 1px 5px; border-radius: 4px; background: rgba
 @media (prefers-reduced-motion: reduce) {
   .orb i, .orb--moon { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
-  .window { transform: none; }
+  .window { --p: 0; }
 }

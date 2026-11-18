@@ -104,17 +104,25 @@ function makeSky(el, { live = true, density = 1, caption = true } = {}) {
 }
 
 /* ======================================================================
-   Hero: tilt the app window flat as it scrolls into view
+   Hero: the app window starts leaning back and straightens as it scrolls in
    ====================================================================== */
 const hero = $('#hero-window');
+let tiltQueued = false;
 function tilt() {
-  if (reduceMotion.matches) return;
+  tiltQueued = false;
+  if (reduceMotion.matches) { hero.style.setProperty('--p', '0'); return; }
   const r = hero.getBoundingClientRect();
-  const t = clamp((r.top - 80) / (innerHeight * 0.6), 0, 1);
-  hero.style.setProperty('--tilt', `${(t * 14).toFixed(2)}deg`);
+  // fully angled while its top sits low in the viewport, flat by the time it nears the nav
+  const t = clamp((r.top - innerHeight * 0.12) / (innerHeight * 0.5), 0, 1);
+  const eased = t * t * (3 - 2 * t); // smoothstep, so it settles gently
+  hero.style.setProperty('--p', eased.toFixed(3));
 }
-addEventListener('scroll', tilt, { passive: true });
-addEventListener('resize', tilt);
+function queueTilt() {
+  if (!tiltQueued) { tiltQueued = true; requestAnimationFrame(tilt); }
+}
+addEventListener('scroll', queueTilt, { passive: true });
+addEventListener('resize', queueTilt);
+reduceMotion.addEventListener?.('change', queueTilt);
 tilt();
 
 /* ======================================================================
