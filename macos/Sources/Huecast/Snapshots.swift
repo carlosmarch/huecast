@@ -36,7 +36,9 @@ enum Snapshots {
             await step("widget", dir)
 
             toggleStatusItem()
-            try? await Task.sleep(for: .seconds(1.5))
+            // the widget closed the window: open it again
+            model.openMainWindow?()
+            try? await Task.sleep(for: .seconds(2))
             saveWindows(to: dir, step: "window")
             await step("window", dir)
 
