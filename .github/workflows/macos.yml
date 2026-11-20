@@ -46,22 +46,32 @@ jobs:
             --title "Huecast for Mac 1.0.${{ github.run_number }}" \
             --notes "Huecast for macOS 14 or later. Unzip, move Huecast.app to Applications and open it. It isn't notarized yet: the first time, run \`xattr -dr com.apple.quarantine /Applications/Huecast.app\` or allow it in System Settings → Privacy & Security." \
             --latest
-      # Opens the app on a fixed place, then the menu bar widget (compact
-      # and expanded); the app waits at each step for the screenshot
+      # Opens the app on a demo scene, then the menu bar widget and full
+      # screen; the app waits at each step for the screenshot. One run per
+      # scene, each in its own folder
       - name: Screenshots
         continue-on-error: true
         run: |
-          SHOTS="$PWD/build/shots"
-          mkdir -p "$SHOTS"
-          open -n build/Huecast.app --args -demo -code 73 -temp -4 -hour 10.5 -name "Helsinki, FI" -snapshots "$SHOTS"
-          for step in widget window fullscreen; do
-            for i in $(seq 1 90); do [ -f "$SHOTS/$step.ready" ] && break; sleep 1; done
-            screencapture -x "$SHOTS/screen-$step.png" || echo "screencapture failed"
-            touch "$SHOTS/$step.done"
-          done
-          sleep 3
-          rm -f "$SHOTS"/*.ready "$SHOTS"/*.done
-          ls -la "$SHOTS"
+          shoot() {
+            SHOTS="$PWD/build/shots/$1"; shift
+            mkdir -p "$SHOTS"
+            open -n build/Huecast.app --args -demo "$@" -snapshots "$SHOTS"
+            for step in widget window fullscreen; do
+              for i in $(seq 1 90); do [ -f "$SHOTS/$step.ready" ] && break; sleep 1; done
+              screencapture -x "$SHOTS/screen-$step.png" || echo "screencapture failed"
+              touch "$SHOTS/$step.done"
+            done
+            for i in $(seq 1 30); do pgrep -x Huecast >/dev/null || break; sleep 1; done
+            pkill -x Huecast || true
+            rm -f "$SHOTS"/*.ready "$SHOTS"/*.done
+          }
+          shoot 1-snow-night   -code 75 -temp -2 -hour 1.5  -name "Helsinki, FI"
+          shoot 2-hot-noon     -code 0  -temp 34 -hour 13   -name "Seville, ES"
+          shoot 3-storm-dusk   -code 95 -temp 24 -hour 19.5 -name "Miami, US"
+          shoot 4-fog-morning  -code 45 -temp 9  -hour 8.5  -name "San Francisco, US"
+          shoot 5-rain-evening -code 63 -temp 12 -hour 21   -name "London, GB"
+          shoot 6-frozen-night -code 0  -temp -14 -hour 23  -name "Oslo, NO"
+          ls -R build/shots
       - uses: actions/upload-artifact@v4
         with:
           name: Huecast-screenshots

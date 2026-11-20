@@ -7,9 +7,9 @@ made from **temperature × time of day**, and the weather drawn as particles.
 
 **[Download for MacOS](https://github.com/carlosmarch/huecast/releases/latest/download/Huecast.zip)** · macOS 14 or later · Free
 
-<img src="screenshots/window.jpg" width="100%" alt="The Huecast window on a Mac desktop: a snowy morning sky, the veiled sun and the 24-hour forecast bar">
+<img src="screenshots/window.jpg" width="100%" alt="The Huecast window on a Mac desktop: heavy snow at night, the moon and the 24-hour forecast bar with the bright day ahead">
 
-<img src="screenshots/widget.jpg" width="100%" alt="The Huecast menu bar widget open under the sky icon: the temperature, the condition and the sun">
+<img src="screenshots/widget.jpg" width="100%" alt="The Huecast menu bar widget open under the sky icon: the temperature, the condition and the moon">
 
 The menu bar icon in different skies, on a light and a dark menu bar:
 
