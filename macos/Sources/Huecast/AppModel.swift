@@ -138,7 +138,9 @@ final class AppModel {
     func start() {
         guard !started else { return }
         started = true
-        if let lat = Self.argument("-lat").flatMap({ Double($0) }), let lon = Self.argument("-lon").flatMap({ Double($0) }) {
+        if CommandLine.arguments.contains("-demo") {
+            startDemo()
+        } else if let lat = Self.argument("-lat").flatMap({ Double($0) }), let lon = Self.argument("-lon").flatMap({ Double($0) }) {
             open(Place(lat: lat, lon: lon, label: Self.argument("-name") ?? ""))
         } else {
             locate(initial: true)
@@ -222,6 +224,51 @@ final class AppModel {
         return await WeatherAPI.reverseGeocode(lat: p.lat, lon: p.lon)
     }
 
+    // MARK: - Demo
+
+    @ObservationIgnored private(set) var demo = false
+
+    /// Fake weather, no network, like the web app's ?demo. Launch with
+    /// `-demo -code 73 -temp -4 -hour 10.5 -name "Helsinki, FI"`: the WMO
+    /// code, °C and local hour of "now"; the next 24 hours drift from there
+    func startDemo() {
+        demo = true
+        let code = Self.argument("-code").flatMap { Int($0) } ?? 73
+        let temp = Self.argument("-temp").flatMap { Double($0) } ?? -4
+        let hour = Self.argument("-hour").flatMap { Double($0) } ?? 10.5
+        let name = Self.argument("-name") ?? "Helsinki, FI"
+
+        // an offset that makes "now" fall on that local hour
+        let now = Date().timeIntervalSince1970
+        let utcSeconds = now.truncatingRemainder(dividingBy: 86400)
+        let offset = hour * 3600 - utcSeconds
+        let dayStart = floor((now + offset) / 86400) * 86400 - offset
+        let daylight = (-1...7).map { d in
+            SunTimes(rise: dayStart + Double(d) * 86400 + 7.5 * 3600, set: dayStart + Double(d) * 86400 + 17 * 3600)
+        }
+        func isDay(_ t: Double) -> Bool { daylight.contains { t >= $0.rise && t < $0.set } }
+
+        var next = [Hour(time: now, temp: temp, feels: temp - 4, code: code, isDay: isDay(now), wind: 10,
+                         data: HourData(), isNow: true)]
+        let firstHour = ceil(now / 3600) * 3600
+        for i in 0..<24 {
+            let t = firstHour + Double(i) * 3600
+            let local = ((t + offset) / 3600).truncatingRemainder(dividingBy: 24)
+            // warmest mid afternoon, coldest before dawn
+            let swing = 3 * cos((local - 15) / 24 * 2 * .pi)
+            let c = i < 5 ? code : i < 9 ? 71 : i < 16 ? 3 : 1
+            next.append(Hour(time: t, temp: temp - 1.5 + swing, feels: temp - 5 + swing, code: c, isDay: isDay(t),
+                             wind: 10, data: HourData()))
+        }
+        place = Place(lat: 60.17, lon: 24.94, label: name)
+        forecast = Forecast(offset: offset, next: next, days: [], daylight: daylight)
+        viewDay = nil
+        selected = 0
+        clock = Date()
+        status = .ready
+        if Snapshots.directory != nil { Snapshots.run(self) }
+    }
+
     /// one more try after a timeout or a dropped connection
     nonisolated private static func forecastRetrying(_ p: Place) async throws -> Forecast {
         do {
@@ -233,7 +280,7 @@ final class AppModel {
     }
 
     func refresh() async {
-        guard let p = place, status == .ready else { return }
+        guard let p = place, status == .ready, !demo else { return }
         guard let f = try? await WeatherAPI.forecast(lat: p.lat, lon: p.lon), place?.isSame(as: p) == true else { return }
         forecast = f
         // the day being viewed is gone: back to the next 24 hours

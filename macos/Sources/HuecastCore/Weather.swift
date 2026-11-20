@@ -63,6 +63,10 @@ public struct Forecast: Codable, Hashable, Sendable {
     /// the coming days after today, each with its 24 local hours
     public var days: [Day]
     public var daylight: [SunTimes]
+
+    public init(offset: Double, next: [Hour], days: [Day], daylight: [SunTimes]) {
+        self.offset = offset; self.next = next; self.days = days; self.daylight = daylight
+    }
 }
 
 public struct SearchResult: Hashable, Sendable, Identifiable {
