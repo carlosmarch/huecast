@@ -137,7 +137,7 @@ final class AppModel {
     @ObservationIgnored private var started = false
 
     /// Called by the window and by the menu bar icon, whichever comes first.
-    /// `--lat 40.4 --lon -3.7 --name Madrid` opens a fixed place
+    /// `-lat 40.4 -lon -3.7 -name Madrid` opens a fixed place
     func start() {
         guard !started else { return }
         started = true
@@ -146,7 +146,6 @@ final class AppModel {
         } else {
             locate(initial: true)
         }
-    }
     }
 
     func locate(initial: Bool = false) {
