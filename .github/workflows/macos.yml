@@ -1,0 +1,27 @@
+name: macOS app
+
+on:
+  push:
+    paths: ['macos/**', 'icons/**', '.github/workflows/macos.yml']
+  pull_request:
+    paths: ['macos/**', 'icons/**', '.github/workflows/macos.yml']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: macos
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test the sky engine
+        run: swift test
+      - name: Build Huecast.app
+        run: ./build-app.sh
+      - name: Zip
+        run: ditto -c -k --keepParent build/Huecast.app build/Huecast.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Huecast-macOS
+          path: macos/build/Huecast.zip
