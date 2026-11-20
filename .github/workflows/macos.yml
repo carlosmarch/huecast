@@ -53,7 +53,7 @@ jobs:
         run: |
           SHOTS="$PWD/build/shots"
           mkdir -p "$SHOTS"
-          open -n build/Huecast.app --args -demo -code 73 -temp -4 -hour 10.5 -name "Helsinki, FI" -snapshots "$SHOTS"
+          open -n build/Huecast.app --args -demo -code 75 -temp -2 -hour 1.5 -name "Helsinki, FI" -snapshots "$SHOTS"
           for step in widget window fullscreen; do
             for i in $(seq 1 90); do [ -f "$SHOTS/$step.ready" ] && break; sleep 1; done
             screencapture -x "$SHOTS/screen-$step.png" || echo "screencapture failed"
