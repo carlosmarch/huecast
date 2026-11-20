@@ -40,9 +40,9 @@ It's ad-hoc signed, so the first time, right click it and choose **Open**.
 - **Menu bar:** a full circle painted with the current sky, with a border in
   the menu bar's text colour, and the temperature next to it (can be turned off).
   Click it for a small widget (place, temperature, condition, sun or moon over the
-  live sky); the expand button grows it to the forecast bar, with location,
-  random city and a button to open the window. Closing the window keeps Huecast
-  in the menu bar
+  live sky); the expand button opens Huecast full screen. Right click the widget
+  for units, the temperature in the menu bar and Quit. Closing the window keeps
+  Huecast in the menu bar
 
 Launch options (also used by CI for screenshots):
 `open Huecast.app --args -lat 40.42 -lon -3.70 -name "Madrid, ES"` opens a fixed place;

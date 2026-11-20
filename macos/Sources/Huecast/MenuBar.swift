@@ -50,21 +50,18 @@ struct MenuBarLabel: View {
 
 // MARK: - Widget
 
-/// What opens from the menu bar icon: a small sky like a widget, which
-/// expands to show the forecast bar
+/// What opens from the menu bar icon: a small sky like a widget. The
+/// expand button opens Huecast full screen; right click for options
 struct MenuBarWidget: View {
     var model: AppModel
 
     @Environment(\.openWindow) private var openWindow
     @State private var sunFrame: CGRect = .zero
-    @State private var window: NSWindow?
+    @State private var panel: NSWindow?
 
-    static let compact = CGSize(width: 320, height: 172)
-    static let expanded = CGSize(width: 380, height: 500)
+    static let size = CGSize(width: 320, height: 172)
 
     var body: some View {
-        let expanded = model.widgetExpanded
-        let size = expanded ? Self.expanded : Self.compact
         let cur = model.status == .ready ? model.current : nil
         let ink = Ink(dark: cur?.inkDark ?? false)
 
@@ -73,27 +70,43 @@ struct MenuBarWidget: View {
                     darken: cur?.condition.fx.darken ?? 0)
             SceneView(state: sceneState(cur), anchor: sunFrame.minY...max(sunFrame.maxY, sunFrame.minY))
                 .blendMode(ink.dark ? .exclusion : .normal)
-            if expanded {
-                expandedContent(cur, ink: ink)
-            } else {
-                compactContent(cur, ink: ink)
-            }
+            content(cur, ink: ink)
         }
         .coordinateSpace(name: "widget")
         .foregroundStyle(ink.main)
-        .frame(width: size.width, height: size.height)
+        .frame(width: Self.size.width, height: Self.size.height)
         .clipped()
-        .animation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.4), value: expanded)
+        .contextMenu {
+            Toggle("Temperature in Menu Bar", isOn: Binding(get: { model.menuBarTemperature },
+                                                             set: { model.menuBarTemperature = $0 }))
+            Picker("Units", selection: Binding(get: { model.unit }, set: { model.unit = $0 })) {
+                Text("°C").tag(TempUnit.c)
+                Text("°F").tag(TempUnit.f)
+            }
+            Divider()
+            Button("Quit Huecast") { NSApp.terminate(nil) }
+        }
         .onAppear { model.start() }
-        .background(WindowFinder { w in if window !== w { DispatchQueue.main.async { window = w } } })
-        .onChange(of: expanded) { _, new in fit(window, to: new ? Self.expanded : Self.compact) }
+        .background(WindowFinder { w in if panel !== w { DispatchQueue.main.async { panel = w } } })
     }
 
-    // MARK: Compact: place, condition, temperature and the sun
-
-    private func compactContent(_ cur: HourSky?, ink: Ink) -> some View {
+    /// Place, condition, temperature and the sun
+    private func content(_ cur: HourSky?, ink: Ink) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            topRow(cur, ink: ink)
+            HStack(alignment: .top, spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(model.place?.label ?? "Huecast")
+                        .font(.system(size: 12, weight: .semibold)).tracking(1.2)
+                        .textCase(.uppercase)
+                        .lineLimit(1)
+                    Text(cur.map { $0.hour.isNow ? "Now" : "\(Format.pad($0.local.hour)):00" } ?? " ")
+                        .font(.system(size: 10)).tracking(1.2).textCase(.uppercase)
+                        .foregroundStyle(ink.soft)
+                }
+                Spacer()
+                WidgetButton(symbol: "arrow.up.left.and.arrow.down.right", help: "Open full screen", ink: ink,
+                             action: openFullScreen)
+            }
             Spacer(minLength: 0)
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 6) {
@@ -111,106 +124,20 @@ struct MenuBarWidget: View {
         .padding(16)
     }
 
-    // MARK: Expanded: the big screen in small, with the forecast bar
-
-    private func expandedContent(_ cur: HourSky?, ink: Ink) -> some View {
-        VStack(spacing: 0) {
-            topRow(cur, ink: ink)
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
-            Spacer(minLength: 0)
-            Text(headline(cur))
-                .font(.system(size: 13, weight: .bold)).tracking(3.2)
-                .padding(.bottom, 26)
-            sun(cur, ink: ink, size: 84)
-            temperature(cur, size: 46, ink: ink)
-                .padding(.top, 22)
-            Text(cur.map { Format.date($0.local) } ?? " ")
-                .font(.system(size: 10)).tracking(1.6).textCase(.uppercase)
-                .foregroundStyle(ink.soft)
-                .contentTransition(.numericText(countsDown: model.rollDirection < 0))
-                .padding(.top, 8)
-            Spacer(minLength: 0)
-            if cur != nil {
-                ForecastBar(model: model, ink: ink.main, inkSoft: ink.soft, inkFaint: ink.faint, compact: true)
-            }
-            bottomRow(ink: ink)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 14)
-        }
-    }
-
-    private func topRow(_ cur: HourSky?, ink: Ink) -> some View {
-        HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(model.place?.label ?? "Huecast")
-                    .font(.system(size: 12, weight: .semibold)).tracking(1.2)
-                    .textCase(.uppercase)
-                    .lineLimit(1)
-                if !model.widgetExpanded {
-                    Text(cur.map { $0.hour.isNow ? "Now" : "\(Format.pad($0.local.hour)):00" } ?? " ")
-                        .font(.system(size: 10)).tracking(1.2).textCase(.uppercase)
-                        .foregroundStyle(ink.soft)
-                }
-            }
-            Spacer()
-            WidgetButton(symbol: model.widgetExpanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right",
-                         help: model.widgetExpanded ? "Collapse" : "Expand", ink: ink) {
-                model.widgetExpanded.toggle()
-            }
-        }
-    }
-
-    private func bottomRow(ink: Ink) -> some View {
-        HStack(spacing: 8) {
-            WidgetButton(symbol: "location", help: "Use my location", ink: ink) { model.locate() }
-            WidgetButton(symbol: "dice", help: "Random city", ink: ink) { model.openRandomCity() }
-            Spacer()
-            Button(action: openApp) {
-                Text("Open Huecast")
-                    .font(.system(size: 11, weight: .semibold)).tracking(0.6)
-                    .padding(.horizontal, 12).frame(height: 28)
-                    .background(ink.main.opacity(0.12), in: Capsule())
-                    .overlay(Capsule().strokeBorder(ink.main.opacity(0.2), lineWidth: 0.5))
-                    .contentShape(Capsule())
-            }
-            .buttonStyle(.plain)
-            Menu {
-                Toggle("Temperature in Menu Bar", isOn: Binding(get: { model.menuBarTemperature },
-                                                                 set: { model.menuBarTemperature = $0 }))
-                Picker("Units", selection: Binding(get: { model.unit }, set: { model.unit = $0 })) {
-                    Text("°C").tag(TempUnit.c)
-                    Text("°F").tag(TempUnit.f)
-                }
-                Divider()
-                Button("Quit Huecast") { NSApp.terminate(nil) }
-            } label: {
-                Image(systemName: "ellipsis").font(.system(size: 12, weight: .semibold))
-                    .frame(width: 28, height: 28)
-            }
-            .menuStyle(.button)
-            .buttonStyle(.plain)
-            .menuIndicator(.hidden)
-            .fixedSize()
-            .background(ink.main.opacity(0.12), in: Circle())
-        }
-    }
-
     // MARK: Pieces
 
-    /// The menu bar window grows with its content but never shrinks back:
-    /// resize it by hand, keeping its top edge under the menu bar
-    private func fit(_ window: NSWindow?, to size: CGSize) {
-        guard let window else { return }
-        var frame = window.frameRect(forContentRect: NSRect(origin: .zero, size: size))
-        frame.origin.x = window.frame.midX - frame.width / 2
-        frame.origin.y = window.frame.maxY - frame.height
-        window.setFrame(frame, display: true, animate: true)
-    }
-
-    private func openApp() {
+    /// Closes the widget and opens the Huecast window full screen
+    private func openFullScreen() {
+        panel?.orderOut(nil)
         openWindow(id: "main")
         NSApp.activate(ignoringOtherApps: true)
+        model.select(0)
+        // the window may still be on its way
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            guard let main = NSApp.windows.first(where: { $0.title == "Huecast" && $0.canBecomeMain }) else { return }
+            main.makeKeyAndOrderFront(nil)
+            if !main.styleMask.contains(.fullScreen) { main.toggleFullScreen(nil) }
+        }
     }
 
     private func headline(_ cur: HourSky?) -> String {

@@ -23,21 +23,10 @@ enum Snapshots {
             }
             try? await Task.sleep(for: .seconds(3))
 
-            model.widgetExpanded = false
             toggleStatusItem()
             try? await Task.sleep(for: .seconds(2.5))
-            saveWindows(to: dir, step: "compact")
-            await step("compact", dir)
-
-            model.widgetExpanded = true
-            try? await Task.sleep(for: .seconds(2.5))
-            saveWindows(to: dir, step: "expanded")
-            await step("expanded", dir)
-
-            model.widgetExpanded = false
-            try? await Task.sleep(for: .seconds(2))
-            saveWindows(to: dir, step: "collapsed")
-            await step("collapsed", dir)
+            saveWindows(to: dir, step: "widget")
+            await step("widget", dir)
 
             toggleStatusItem()
             try? await Task.sleep(for: .seconds(1.5))

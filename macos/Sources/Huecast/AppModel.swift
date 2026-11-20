@@ -49,10 +49,6 @@ final class AppModel {
     var showDays = false
     var wallpaper = false
     var toast: String?
-    /// the menu bar widget shows the forecast bar and more
-    var widgetExpanded = UserDefaults.standard.bool(forKey: "widgetExpanded") {
-        didSet { UserDefaults.standard.set(widgetExpanded, forKey: "widgetExpanded") }
-    }
     /// the temperature next to the menu bar icon
     var menuBarTemperature = UserDefaults.standard.object(forKey: "menuBarTemperature") as? Bool ?? true {
         didSet { UserDefaults.standard.set(menuBarTemperature, forKey: "menuBarTemperature") }
