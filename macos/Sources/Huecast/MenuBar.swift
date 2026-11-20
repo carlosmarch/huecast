@@ -57,6 +57,7 @@ struct MenuBarWidget: View {
 
     @Environment(\.openWindow) private var openWindow
     @State private var sunFrame: CGRect = .zero
+    @State private var window: NSWindow?
 
     static let compact = CGSize(width: 320, height: 172)
     static let expanded = CGSize(width: 380, height: 500)
@@ -84,6 +85,8 @@ struct MenuBarWidget: View {
         .clipped()
         .animation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.4), value: expanded)
         .onAppear { model.start() }
+        .background(WindowFinder { w in if window !== w { DispatchQueue.main.async { window = w } } })
+        .onChange(of: expanded) { _, new in fit(window, to: new ? Self.expanded : Self.compact) }
     }
 
     // MARK: Compact: place, condition, temperature and the sun
@@ -194,6 +197,16 @@ struct MenuBarWidget: View {
     }
 
     // MARK: Pieces
+
+    /// The menu bar window grows with its content but never shrinks back:
+    /// resize it by hand, keeping its top edge under the menu bar
+    private func fit(_ window: NSWindow?, to size: CGSize) {
+        guard let window else { return }
+        var frame = window.frameRect(forContentRect: NSRect(origin: .zero, size: size))
+        frame.origin.x = window.frame.midX - frame.width / 2
+        frame.origin.y = window.frame.maxY - frame.height
+        window.setFrame(frame, display: true, animate: true)
+    }
 
     private func openApp() {
         openWindow(id: "main")
