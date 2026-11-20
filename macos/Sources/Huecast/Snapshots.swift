@@ -22,6 +22,11 @@ enum Snapshots {
                 try? data.write(to: dir.appendingPathComponent("menubar-icons.png"))
             }
             try? await Task.sleep(for: .seconds(3))
+            // the demo starts before the window is up: make sure it's open
+            if !NSApp.windows.contains(where: { $0.title == "Huecast" && $0.canBecomeMain && $0.isVisible }) {
+                model.openMainWindow?()
+                try? await Task.sleep(for: .seconds(2))
+            }
 
             toggleStatusItem()
             try? await Task.sleep(for: .seconds(2.5))

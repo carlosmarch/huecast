@@ -227,6 +227,9 @@ final class AppModel {
     // MARK: - Demo
 
     @ObservationIgnored private(set) var demo = false
+    /// opens the main window; set by the menu bar label, which can
+    /// reach SwiftUI's openWindow (the screenshot mode needs it)
+    @ObservationIgnored var openMainWindow: (() -> Void)?
 
     /// Fake weather, no network, like the web app's ?demo. Launch with
     /// `-demo -code 73 -temp -4 -hour 10.5 -name "Helsinki, FI"`: the WMO
