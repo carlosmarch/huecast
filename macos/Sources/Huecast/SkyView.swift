@@ -68,7 +68,7 @@ struct SkyView: View {
                         .ignoresSafeArea()
                 }
             }
-            // every layer reaches under the title bar, or the top shows a band
+            // every layer reaches under the title bar
             Color(Tokens.veil).opacity(darken)
                 .ignoresSafeArea()
         }

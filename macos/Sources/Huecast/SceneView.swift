@@ -58,7 +58,25 @@ final class SceneEngine {
     static let refArea = 1440.0 * 900
     static let fade = 0.8
 
-    var anchor: ClosedRange<CGFloat> = 0...0
+    /// where the sun is, for the cloud bands. It's known only after layout,
+    /// so the clouds made before it move there when it arrives
+    var anchor: ClosedRange<CGFloat> = 0...0 {
+        didSet {
+            guard anchor != oldValue, var clouds = layers[.clouds] else { return }
+            for i in clouds.indices { clouds[i].y = cloudY() }
+            layers[.clouds] = clouds
+        }
+    }
+
+    /// a cloud band's height: across the sun, or mid sky until it's placed
+    private func cloudY() -> Double {
+        var top = Double(anchor.lowerBound), bottom = Double(anchor.upperBound)
+        if bottom - top < 1 {
+            top = Double(size.height) * 0.3
+            bottom = Double(size.height) * 0.45
+        }
+        return rand(top, max(bottom, top + 1))
+    }
     private var state: SceneState?
     private var layers: [Layer: [Particle]] = [:]
     private var thunder: [(cycle: Double, start: Double)] = []
@@ -128,8 +146,7 @@ final class SceneEngine {
             p.phase = rand(0, .pi * 2)
             p.speed = rand(0.5, 1.3) // each star breathes at its own pace
         case .clouds:
-            let top = Double(anchor.lowerBound), bottom = Double(anchor.upperBound)
-            p.y = rand(top, max(bottom, top + 1)); p.size = rand(1, 30); p.a = rand(0.01, 0.08); p.phase = rand(0, 10)
+            p.y = cloudY(); p.size = rand(1, 30); p.a = rand(0.01, 0.08); p.phase = rand(0, 10)
         case .fog:
             // thicker fog reaches higher and is denser
             let lvl = Double(fx.fogLevel == 0 ? 2 : fx.fogLevel)
