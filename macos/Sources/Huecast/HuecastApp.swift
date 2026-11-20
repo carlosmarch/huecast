@@ -26,6 +26,7 @@ struct HuecastApp: App {
                 Divider()
                 Toggle("Temperature in Menu Bar", isOn: Binding(get: { model.menuBarTemperature },
                                                                  set: { model.menuBarTemperature = $0 }))
+                Toggle("Show in Dock", isOn: Binding(get: { model.showInDock }, set: { model.showInDock = $0 }))
             }
         }
 
@@ -41,10 +42,9 @@ struct HuecastApp: App {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // launched with `swift run` (no app bundle): still a regular app
-        // with a Dock icon and a menu bar
-        NSApp.setActivationPolicy(.regular)
-        NSApp.activate(ignoringOtherApps: true)
+        // a Dock icon and a menu bar, unless Show in Dock is off (also when
+        // launched with `swift run`, which has no app bundle)
+        AppModel.applyDockPolicy(AppModel.showsInDock)
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }

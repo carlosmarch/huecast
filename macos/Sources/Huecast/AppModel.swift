@@ -51,6 +51,24 @@ final class AppModel {
     var wallpaper = false
     var toast: String?
     /// the temperature next to the menu bar icon
+    /// off: Huecast lives in the menu bar only, with no Dock icon
+    var showInDock = UserDefaults.standard.object(forKey: "showInDock") as? Bool ?? true {
+        didSet {
+            UserDefaults.standard.set(showInDock, forKey: "showInDock")
+            Self.applyDockPolicy(showInDock)
+        }
+    }
+
+    nonisolated static var showsInDock: Bool { UserDefaults.standard.object(forKey: "showInDock") as? Bool ?? true }
+
+    /// .regular has a Dock icon and a menu bar; .accessory has neither,
+    /// its windows still open from the menu bar widget
+    static func applyDockPolicy(_ dock: Bool) {
+        NSApp.setActivationPolicy(dock ? .regular : .accessory)
+        // switching policy can push the app back: keep its windows in front
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
     var menuBarTemperature = UserDefaults.standard.object(forKey: "menuBarTemperature") as? Bool ?? true {
         didSet { UserDefaults.standard.set(menuBarTemperature, forKey: "menuBarTemperature") }
     }
