@@ -39,8 +39,8 @@ It's ad-hoc signed, so the first time, right click it and choose **Open**.
 - Click the sky to hide the buttons
 - **Menu bar:** a full circle painted with the current sky, with a border in
   the menu bar's text colour, and the temperature next to it (can be turned off).
-  Click it for a small widget (place, temperature, condition, sun or moon over the
-  live sky); the expand button opens Huecast full screen. Right click the widget
+  Click it for a small widget: the temperature, the condition and the sun or moon
+  over the live sky. Click the widget to open Huecast full screen. Right click it
   for units, the temperature in the menu bar and Quit. Closing the window keeps
   Huecast in the menu bar
 

@@ -50,8 +50,9 @@ struct MenuBarLabel: View {
 
 // MARK: - Widget
 
-/// What opens from the menu bar icon: a small sky like a widget. The
-/// expand button opens Huecast full screen; right click for options
+/// What opens from the menu bar icon: a small sky like a widget with the
+/// temperature, the condition and the sun. Click it to open Huecast full
+/// screen; right click for options
 struct MenuBarWidget: View {
     var model: AppModel
 
@@ -59,7 +60,7 @@ struct MenuBarWidget: View {
     @State private var sunFrame: CGRect = .zero
     @State private var panel: NSWindow?
 
-    static let size = CGSize(width: 320, height: 172)
+    static let size = CGSize(width: 280, height: 120)
 
     var body: some View {
         let cur = model.status == .ready ? model.current : nil
@@ -76,6 +77,10 @@ struct MenuBarWidget: View {
         .foregroundStyle(ink.main)
         .frame(width: Self.size.width, height: Self.size.height)
         .clipped()
+        .contentShape(Rectangle())
+        // click for more: Huecast full screen
+        .onTapGesture(perform: openFullScreen)
+        .help("Open Huecast")
         .contextMenu {
             Toggle("Temperature in Menu Bar", isOn: Binding(get: { model.menuBarTemperature },
                                                              set: { model.menuBarTemperature = $0 }))
@@ -90,38 +95,20 @@ struct MenuBarWidget: View {
         .background(WindowFinder { w in if panel !== w { DispatchQueue.main.async { panel = w } } })
     }
 
-    /// Place, condition, temperature and the sun
+    /// Just the temperature, the condition and the sun or moon
     private func content(_ cur: HourSky?, ink: Ink) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .top, spacing: 8) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(model.place?.label ?? "Huecast")
-                        .font(.system(size: 12, weight: .semibold)).tracking(1.2)
-                        .textCase(.uppercase)
-                        .lineLimit(1)
-                    Text(cur.map { $0.hour.isNow ? "Now" : "\(Format.pad($0.local.hour)):00" } ?? " ")
-                        .font(.system(size: 10)).tracking(1.2).textCase(.uppercase)
-                        .foregroundStyle(ink.soft)
-                }
-                Spacer()
-                WidgetButton(symbol: "arrow.up.left.and.arrow.down.right", help: "Open full screen", ink: ink,
-                             action: openFullScreen)
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 6) {
+                temperature(cur, size: 44, ink: ink)
+                Text(headline(cur))
+                    .font(.system(size: 11, weight: .bold)).tracking(2.2)
+                    .lineLimit(1)
             }
-            Spacer(minLength: 0)
-            HStack(alignment: .bottom) {
-                VStack(alignment: .leading, spacing: 6) {
-                    temperature(cur, size: 44, ink: ink)
-                    Text(headline(cur))
-                        .font(.system(size: 11, weight: .bold)).tracking(2.2)
-                        .lineLimit(1)
-                }
-                Spacer(minLength: 8)
-                sun(cur, ink: ink, size: 58)
-                    .padding(.trailing, 10)
-                    .padding(.bottom, 8)
-            }
+            Spacer(minLength: 12)
+            sun(cur, ink: ink, size: 56)
+                .padding(.trailing, 8)
         }
-        .padding(16)
+        .padding(.horizontal, 20)
     }
 
     // MARK: Pieces
@@ -162,8 +149,6 @@ struct MenuBarWidget: View {
                 .padding(.top, size * 0.12)
         }
         .animation(.easeOut(duration: 0.3), value: cur?.hour.temp)
-        .onTapGesture { model.toggleUnit() }
-        .help("Switch between Celsius and Fahrenheit")
     }
 
     private func sun(_ cur: HourSky?, ink: Ink, size: CGFloat) -> some View {
