@@ -27,6 +27,7 @@ struct SceneView: View {
             Canvas { ctx, size in
                 engine.draw(ctx, size: size, time: timeline.date.timeIntervalSinceReferenceDate, still: reduceMotion)
             }
+            .ignoresSafeArea()
         }
         .onChange(of: state, initial: true) { _, new in
             engine.anchor = anchor
