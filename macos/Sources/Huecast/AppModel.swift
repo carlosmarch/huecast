@@ -141,13 +141,12 @@ final class AppModel {
     func start() {
         guard !started else { return }
         started = true
-        let args = UserDefaults.standard
-        if args.object(forKey: "lat") != nil, args.object(forKey: "lon") != nil {
-            open(Place(lat: args.double(forKey: "lat"), lon: args.double(forKey: "lon"),
-                       label: args.string(forKey: "name") ?? ""))
+        if let lat = Self.argument("-lat").flatMap({ Double($0) }), let lon = Self.argument("-lon").flatMap({ Double($0) }) {
+            open(Place(lat: lat, lon: lon, label: Self.argument("-name") ?? ""))
         } else {
             locate(initial: true)
         }
+    }
     }
 
     func locate(initial: Bool = false) {
@@ -190,7 +189,7 @@ final class AppModel {
         place = newPlace
         status = .loading
         do {
-            async let f = WeatherAPI.forecast(lat: newPlace.lat, lon: newPlace.lon)
+            async let f = Self.forecastRetrying(newPlace)
             async let name = Self.name(for: newPlace)
             let (forecast, label) = try await (f, name)
             guard !Task.isCancelled, place == newPlace else { return }
@@ -209,13 +208,32 @@ final class AppModel {
             guard !Task.isCancelled, place == newPlace else { return }
             let message = (error as? URLError)?.code == .notConnectedToInternet ? "offline" : "no signal"
             status = .failed(message, detail: String(error.localizedDescription.prefix(120)))
+            if Snapshots.directory != nil { Snapshots.run(self) }
         }
+    }
+
+    /// the value after a launch argument (read by hand: UserDefaults takes
+    /// a negative number like `-3.7` for the next option)
+    nonisolated static func argument(_ name: String) -> String? {
+        let args = CommandLine.arguments
+        guard let i = args.firstIndex(of: name), i + 1 < args.count else { return nil }
+        return args[i + 1]
     }
 
     /// the place's own label, or its name from the coordinates
     nonisolated private static func name(for p: Place) async -> String {
         if !p.label.isEmpty { return p.label }
         return await WeatherAPI.reverseGeocode(lat: p.lat, lon: p.lon)
+    }
+
+    /// one more try after a timeout or a dropped connection
+    nonisolated private static func forecastRetrying(_ p: Place) async throws -> Forecast {
+        do {
+            return try await WeatherAPI.forecast(lat: p.lat, lon: p.lon)
+        } catch let error as URLError where [URLError.Code.timedOut, .networkConnectionLost, .cannotConnectToHost].contains(error.code) {
+            try await Task.sleep(for: .seconds(1))
+            return try await WeatherAPI.forecast(lat: p.lat, lon: p.lon)
+        }
     }
 
     func refresh() async {

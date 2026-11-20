@@ -208,7 +208,7 @@ public enum WeatherAPI {
         var comps = URLComponents(string: base)!
         comps.queryItems = params.sorted { $0.key < $1.key }.map { URLQueryItem(name: $0.key, value: $0.value) }
         var request = URLRequest(url: comps.url!)
-        request.timeoutInterval = 20
+        request.timeoutInterval = 30
         let (data, response) = try await URLSession.shared.data(for: request)
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
             // Open-Meteo explains bad requests: {"error": true, "reason": "..."}

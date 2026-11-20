@@ -10,7 +10,7 @@ import HuecastCore
 /// from inside the app, in case the screen can't be captured
 @MainActor
 enum Snapshots {
-    static let directory: URL? = UserDefaults.standard.string(forKey: "snapshots").map { URL(fileURLWithPath: $0) }
+    static let directory: URL? = AppModel.argument("-snapshots").map { URL(fileURLWithPath: $0) }
     private static var ran = false
 
     static func run(_ model: AppModel) {
