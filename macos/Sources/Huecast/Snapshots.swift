@@ -34,8 +34,12 @@ enum Snapshots {
             saveWindows(to: dir, step: "expanded")
             await step("expanded", dir)
 
-            toggleStatusItem()
             model.widgetExpanded = false
+            try? await Task.sleep(for: .seconds(2))
+            saveWindows(to: dir, step: "collapsed")
+            await step("collapsed", dir)
+
+            toggleStatusItem()
             try? await Task.sleep(for: .seconds(1.5))
             saveWindows(to: dir, step: "window")
             await step("window", dir)
