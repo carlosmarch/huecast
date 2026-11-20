@@ -29,6 +29,10 @@ The 2016 data visualization weather app (then called Timecast), rebuilt for 2026
 | Mobile | fixed paddings | safe areas, phone landscape, touch scrubbing, installable PWA, works offline |
 | Accessibility | – | keyboard support, reduced motion, dark text on very light skies |
 
+## macOS app
+
+A native SwiftUI version lives in [`macos/`](macos/README.md): `cd macos && ./build-app.sh`.
+
 ## Run
 
 Plain static files, no build step. Serve the repo root over HTTP (ES modules don't load from `file://`):
