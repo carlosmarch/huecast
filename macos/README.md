@@ -44,6 +44,27 @@ It's ad-hoc signed, so the first time, right click it and choose **Open**.
   for units, the temperature in the menu bar and Quit. Closing the window keeps
   Huecast in the menu bar
 
+## Keys
+
+The same single keys as the web app, plus ⌘ versions in the **Weather** menu:
+
+| | Key | Menu |
+|---|---|---|
+| Search | `/` | ⌘K |
+| Random city | `R` | ⌘R |
+| My location | `L` | ⌘L |
+| Next days | `N` | ⌘N |
+| Pin this place | `P` | ⌘P |
+| Save as picture | `D` | ⌘S |
+| Desktop wallpaper | `W` | ⇧⌘W |
+| Copy link | `E` | ⌘E |
+| °C / °F | `U` | ⌘U |
+| Hide the buttons | `H` | |
+| Full screen | `F` | ⌃⌘F |
+| How it works | `?` | |
+| Forecast hours | `←` `→` `Home` `End` | ⌘← ⌘→ |
+| Close, leave full screen | `Esc` | |
+
 Launch options (also used by CI for screenshots):
 `open Huecast.app --args -lat 40.42 -lon -3.70 -name "Madrid, ES"` opens a fixed place;
 `-snapshots <dir>` walks through the widget and saves screenshots there.

@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import HuecastCore
 
 /// Everything the sky shows for one forecast hour. Shared by the big sky
@@ -278,6 +279,20 @@ final class AppModel {
     }
 
     func toggleUnit() { unit = unit == .c ? .f : .c }
+
+    /// A huecast.app link to this place, on the clipboard
+    func copyLink() {
+        guard let p = place else { return }
+        var c = URLComponents(string: "https://huecast.app/")!
+        c.queryItems = [
+            URLQueryItem(name: "lat", value: String(format: "%.4f", p.lat)),
+            URLQueryItem(name: "lon", value: String(format: "%.4f", p.lon)),
+            URLQueryItem(name: "name", value: p.label),
+        ]
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(c.url?.absoluteString ?? "", forType: .string)
+        showToast("Link copied")
+    }
 
     func showToast(_ text: String, seconds: Double = 2.5) {
         toast = text

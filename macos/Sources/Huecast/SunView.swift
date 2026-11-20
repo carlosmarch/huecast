@@ -85,7 +85,7 @@ struct SunView: View {
             let o = reduceMotion ? 1 : Self.keyframes(p, [(0, 1), (0.5, 0.9), (0.6, 0.6), (1, 1)])
             Circle()
                 .fill(.white.opacity(0.2))
-                .overlay(Circle().strokeBorder(.white, lineWidth: 6))
+                .overlay(Circle().strokeBorder(.white, lineWidth: max(1.5, size * 0.058)))
                 .opacity(o)
         }
     }

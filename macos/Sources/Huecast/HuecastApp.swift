@@ -60,6 +60,22 @@ final class DesktopMode {
     @ObservationIgnored private var saved: (frame: NSRect, style: NSWindow.StyleMask, level: NSWindow.Level,
                                             behavior: NSWindow.CollectionBehavior)?
 
+    /// The main window: the sky runs under a see-through title bar, so no
+    /// strip is drawn at the top (in full screen too)
+    func adopt(_ w: NSWindow) {
+        guard window !== w else { return }
+        window = w
+        w.titlebarAppearsTransparent = true
+        w.titleVisibility = .hidden
+        w.styleMask.insert(.fullSizeContentView)
+        w.backgroundColor = NSColor(srgbRed: Tokens.bg.r, green: Tokens.bg.g, blue: Tokens.bg.b, alpha: 1)
+        w.collectionBehavior.insert(.fullScreenPrimary)
+    }
+
+    var isFullScreen: Bool { window?.styleMask.contains(.fullScreen) ?? false }
+
+    func toggleFullScreen() { window?.toggleFullScreen(nil) }
+
     func set(_ on: Bool) {
         guard let w = window else { return }
         if on, saved == nil {

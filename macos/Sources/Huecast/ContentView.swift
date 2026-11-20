@@ -81,12 +81,7 @@ struct ContentView: View {
         .focusable()
         .focusEffectDisabled()
         .focused($focused)
-        .onKeyPress(.leftArrow) { step(-1) }
-        .onKeyPress(.rightArrow) { step(1) }
-        .onKeyPress("/") {
-            model.showSearch = true
-            return .handled
-        }
+        .onKeyPress(phases: .down) { key(Shortcut.from($0)) }
         .onAppear {
             focused = true
             model.start()
@@ -97,12 +92,42 @@ struct ContentView: View {
             desktop.set(on)
             if on { clean = false }
         }
-        .background(WindowFinder { desktop.window = $0 })
+        .background(WindowFinder { desktop.adopt($0) })
     }
 
-    private func step(_ d: Int) -> KeyPress.Result {
-        guard model.status == .ready, !model.showSearch, !model.showDays else { return .ignored }
-        model.select(model.selected + d)
+    /// Single-key shortcuts, the same as the web app (the menu bar has the
+    /// ⌘ versions). Esc closes what's open, then leaves full screen
+    private func key(_ k: Shortcut.Key?) -> KeyPress.Result {
+        guard let k else { return .ignored }
+        if model.showSearch || model.showDays {
+            guard k == .escape else { return .ignored }
+            model.showSearch = false
+            model.showDays = false
+            return .handled
+        }
+        let ready = model.status == .ready
+        switch k {
+        case .escape:
+            if clean { withAnimation(.easeOut(duration: 0.35)) { clean = false } }
+            else if desktop.isFullScreen { desktop.toggleFullScreen() }
+            else { return .ignored }
+        case .left: guard ready else { return .ignored }; model.select(model.selected - 1)
+        case .right: guard ready else { return .ignored }; model.select(model.selected + 1)
+        case .home: model.select(0)
+        case .end: model.select(model.hours.count - 1)
+        case .search: model.showSearch = true
+        case .random: model.openRandomCity()
+        case .locate: model.locate()
+        case .days: if model.forecast?.days.isEmpty == false { model.showDays = true }
+        case .pin: if ready { model.togglePin() }
+        case .picture: if ready { Picture.save(model: model) }
+        case .wallpaper: model.wallpaper.toggle()
+        case .share: model.copyLink()
+        case .units: model.toggleUnit()
+        case .hide: withAnimation(.easeOut(duration: 0.35)) { clean.toggle() }
+        case .fullScreen: desktop.toggleFullScreen()
+        case .help: NSWorkspace.shared.open(URL(string: "https://huecast.app/how.html")!)
+        }
         return .handled
     }
 
@@ -305,7 +330,7 @@ struct MenuItems: View {
         Button("Use My Location") { model.locate() }
             .shortcut("l", if: shortcuts)
         Button("Next Days…") { model.showDays = true }
-            .shortcut("d", if: shortcuts)
+            .shortcut("n", if: shortcuts)
             .disabled(model.forecast?.days.isEmpty ?? true)
         Divider()
         Button(model.isPinned ? "Unpin This Place" : "Pin This Place") { model.togglePin() }
@@ -316,11 +341,12 @@ struct MenuItems: View {
             .disabled(model.status != .ready)
         Button(model.wallpaper ? "Leave Desktop Wallpaper" : "Use as Desktop Wallpaper") { model.wallpaper.toggle() }
             .shortcut("w", [.command, .shift], if: shortcuts)
+        Button("Copy Link") { model.copyLink() }
+            .shortcut("e", if: shortcuts)
+            .disabled(model.place == nil)
         Divider()
-        Picker("Units", selection: Binding(get: { model.unit }, set: { model.unit = $0 })) {
-            Text("°C").tag(TempUnit.c)
-            Text("°F").tag(TempUnit.f)
-        }
+        Button(model.unit == .c ? "Show °F" : "Show °C") { model.toggleUnit() }
+            .shortcut("u", if: shortcuts)
         Divider()
         Link("How It Works", destination: URL(string: "https://huecast.app/how.html")!)
         Link("About Huecast", destination: URL(string: "https://huecast.app/product/")!)
@@ -331,5 +357,41 @@ extension View {
     @ViewBuilder
     func shortcut(_ key: KeyEquivalent, _ modifiers: EventModifiers = .command, if on: Bool) -> some View {
         if on { keyboardShortcut(key, modifiers: modifiers) } else { self }
+    }
+}
+
+/// The keyboard: single keys like the web app
+enum Shortcut {
+    enum Key {
+        case escape, left, right, home, end
+        case search, random, locate, days, pin, picture, wallpaper, share, units, hide, fullScreen, help
+    }
+
+    static func from(_ press: KeyPress) -> Key? {
+        switch press.key {
+        case .escape: return .escape
+        case .leftArrow: return .left
+        case .rightArrow: return .right
+        case .home: return .home
+        case .end: return .end
+        default: break
+        }
+        // ⌘, ⌃ and ⌥ combinations belong to the menus
+        guard press.modifiers.isDisjoint(with: [.command, .control, .option]) else { return nil }
+        switch press.characters.lowercased() {
+        case "/": return .search
+        case "r": return .random
+        case "l": return .locate
+        case "n": return .days
+        case "p": return .pin
+        case "d": return .picture
+        case "w": return .wallpaper
+        case "e": return .share
+        case "u": return .units
+        case "h": return .hide
+        case "f": return .fullScreen
+        case "?": return .help
+        default: return nil
+        }
     }
 }

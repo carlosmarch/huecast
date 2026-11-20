@@ -60,7 +60,7 @@ struct MenuBarWidget: View {
     @State private var sunFrame: CGRect = .zero
     @State private var panel: NSWindow?
 
-    static let size = CGSize(width: 280, height: 120)
+    static let size = CGSize(width: 248, height: 96)
 
     var body: some View {
         let cur = model.status == .ready ? model.current : nil
@@ -99,13 +99,14 @@ struct MenuBarWidget: View {
     private func content(_ cur: HourSky?, ink: Ink) -> some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 6) {
-                temperature(cur, size: 44, ink: ink)
+                temperature(cur, size: 30, ink: ink)
                 Text(headline(cur))
-                    .font(.system(size: 11, weight: .bold)).tracking(2.2)
+                    .font(.system(size: 9, weight: .medium)).tracking(1.8)
+                    .foregroundStyle(ink.soft)
                     .lineLimit(1)
             }
             Spacer(minLength: 12)
-            sun(cur, ink: ink, size: 56)
+            sun(cur, ink: ink, size: 44)
                 .padding(.trailing, 8)
         }
         .padding(.horizontal, 20)
@@ -139,12 +140,12 @@ struct MenuBarWidget: View {
     private func temperature(_ cur: HourSky?, size: CGFloat, ink: Ink) -> some View {
         HStack(alignment: .top, spacing: 1) {
             Text(cur.map { "\(model.toUnit($0.hour.temp))" } ?? "–")
-                .font(.system(size: size, weight: .light))
+                .font(.system(size: size, weight: .thin))
                 .monospacedDigit()
                 .contentTransition(.numericText(countsDown: model.rollDirection < 0))
-            Text("°").font(.system(size: size / 2, weight: .light)).padding(.top, 1)
+            Text("°").font(.system(size: size / 2, weight: .thin)).padding(.top, 1)
             Text(model.unit.rawValue)
-                .font(.system(size: size * 0.24, weight: .semibold)).tracking(1.5)
+                .font(.system(size: size * 0.3, weight: .regular)).tracking(1.2)
                 .foregroundStyle(ink.soft)
                 .padding(.top, size * 0.12)
         }
