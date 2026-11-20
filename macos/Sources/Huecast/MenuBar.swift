@@ -101,7 +101,14 @@ struct MenuBarWidget: View {
             Divider()
             Button("Quit Huecast") { NSApp.terminate(nil) }
         }
-        .onAppear { model.start() }
+        .onAppear {
+            model.start()
+            closeMainWindow()
+        }
+        // the panel is kept between opens, so onAppear can fire just once
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { note in
+            if let w = note.object as? NSWindow, w === panel { closeMainWindow() }
+        }
         .background(WindowFinder { w in if panel !== w { DispatchQueue.main.async { panel = w } } })
     }
 
@@ -123,6 +130,13 @@ struct MenuBarWidget: View {
     }
 
     // MARK: Pieces
+
+    /// One or the other: the widget opens instead of the window (but leaves
+    /// the window alone while it's the desktop wallpaper)
+    private func closeMainWindow() {
+        guard !model.wallpaper else { return }
+        NSApp.windows.first { $0.title == "Huecast" && $0.canBecomeMain && $0.isVisible }?.close()
+    }
 
     /// Closes the widget and opens the Huecast window full screen
     private func openFullScreen() {
