@@ -15,6 +15,11 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/Huecast"
 cp Support/Info.plist "$APP/Contents/Info.plist"
+# CI passes the version: VERSION=1.0.42 BUILD=42
+if [ -n "${VERSION:-}" ]; then
+  plutil -replace CFBundleShortVersionString -string "$VERSION" "$APP/Contents/Info.plist"
+  plutil -replace CFBundleVersion -string "${BUILD:-1}" "$APP/Contents/Info.plist"
+fi
 
 # App icon from the web app's icon
 ICONSET=build/AppIcon.iconset

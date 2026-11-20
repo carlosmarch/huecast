@@ -20,6 +20,11 @@ random city, since a bare executable can't ask for location permission).
 `swift test` checks the sky engine against colours and effects computed by the
 web app, so both draw the same sky. The tests also run on Linux.
 
+**Download:** every build of the default branch is published as the latest
+[GitHub release](https://github.com/carlosmarch/huecast/releases), and
+<https://github.com/carlosmarch/huecast/releases/latest/download/Huecast.zip>
+(linked from the landing page) always serves the newest one.
+
 Every push that touches `macos/` builds the app on GitHub Actions
 (`.github/workflows/macos.yml`); the zipped `Huecast.app` is attached to the run.
 It's ad-hoc signed, so the first time, right click it and choose **Open**.
