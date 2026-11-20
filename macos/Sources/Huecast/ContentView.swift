@@ -263,7 +263,7 @@ struct ContentView: View {
                 ToolButton(symbol: "magnifyingglass", help: "Search city (⌘K)") { model.showSearch = true }
                 ToolButton(symbol: "dice", help: "Random city (⌘R)") { model.openRandomCity() }
                 Menu {
-                    MenuItems(model: model, shortcuts: false)
+                    MenuItems(model: model)
                 } label: {
                     Image(systemName: "gearshape")
                         .font(.system(size: 15))
@@ -316,8 +316,8 @@ extension View {
     }
 }
 
-/// The options, shared by the gear menu and the menu bar (which owns
-/// the keyboard shortcuts, so they don't fire twice)
+/// The options, shared by the gear menu and the menu bar, both showing
+/// their ⌘ shortcuts (a key press goes to one menu item only)
 struct MenuItems: View {
     var model: AppModel
     var shortcuts = true
