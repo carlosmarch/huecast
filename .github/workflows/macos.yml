@@ -25,3 +25,23 @@ jobs:
         with:
           name: Huecast-macOS
           path: macos/build/Huecast.zip
+      # Opens the app on a fixed place, then the menu bar widget (compact
+      # and expanded); the app waits at each step for the screenshot
+      - name: Screenshots
+        continue-on-error: true
+        run: |
+          SHOTS="$PWD/build/shots"
+          mkdir -p "$SHOTS"
+          open -n build/Huecast.app --args -lat 40.42 -lon -3.70 -name "Madrid, ES" -snapshots "$SHOTS"
+          for step in compact expanded window; do
+            for i in $(seq 1 90); do [ -f "$SHOTS/$step.ready" ] && break; sleep 1; done
+            screencapture -x "$SHOTS/screen-$step.png" || echo "screencapture failed"
+            touch "$SHOTS/$step.done"
+          done
+          sleep 3
+          rm -f "$SHOTS"/*.ready "$SHOTS"/*.done
+          ls -la "$SHOTS"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Huecast-screenshots
+          path: macos/build/shots

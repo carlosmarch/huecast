@@ -49,6 +49,14 @@ final class AppModel {
     var showDays = false
     var wallpaper = false
     var toast: String?
+    /// the menu bar widget shows the forecast bar and more
+    var widgetExpanded = UserDefaults.standard.bool(forKey: "widgetExpanded") {
+        didSet { UserDefaults.standard.set(widgetExpanded, forKey: "widgetExpanded") }
+    }
+    /// the temperature next to the menu bar icon
+    var menuBarTemperature = UserDefaults.standard.object(forKey: "menuBarTemperature") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(menuBarTemperature, forKey: "menuBarTemperature") }
+    }
 
     @ObservationIgnored private var loadTask: Task<Void, Never>?
     @ObservationIgnored private var timers: [Task<Void, Never>] = []
@@ -126,8 +134,20 @@ final class AppModel {
 
     // MARK: - Loading
 
+    @ObservationIgnored private var started = false
+
+    /// Called by the window and by the menu bar icon, whichever comes first.
+    /// `--lat 40.4 --lon -3.7 --name Madrid` opens a fixed place
     func start() {
-        locate(initial: true)
+        guard !started else { return }
+        started = true
+        let args = UserDefaults.standard
+        if args.object(forKey: "lat") != nil, args.object(forKey: "lon") != nil {
+            open(Place(lat: args.double(forKey: "lat"), lon: args.double(forKey: "lon"),
+                       label: args.string(forKey: "name") ?? ""))
+        } else {
+            locate(initial: true)
+        }
     }
 
     func locate(initial: Bool = false) {
@@ -184,6 +204,7 @@ final class AppModel {
             clock = Date()
             status = .ready
             if remember { Self.save(p, Keys.place) }
+            if Snapshots.directory != nil { Snapshots.run(self) }
         } catch {
             guard !Task.isCancelled, place == newPlace else { return }
             let message = (error as? URLError)?.code == .notConnectedToInternet ? "offline" : "no signal"

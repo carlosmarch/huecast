@@ -23,8 +23,19 @@ struct HuecastApp: App {
                     .keyboardShortcut(.leftArrow)
                 Button("Later Hour") { model.select(model.selected + 1) }
                     .keyboardShortcut(.rightArrow)
+                Divider()
+                Toggle("Temperature in Menu Bar", isOn: Binding(get: { model.menuBarTemperature },
+                                                                 set: { model.menuBarTemperature = $0 }))
             }
         }
+
+        // the sky in the menu bar; click it for a small widget that expands
+        MenuBarExtra {
+            MenuBarWidget(model: model)
+        } label: {
+            MenuBarLabel(model: model)
+        }
+        .menuBarExtraStyle(.window)
     }
 }
 
@@ -36,7 +47,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 }
 
 /// Turns the window into a live desktop picture: borderless, filling the

@@ -9,12 +9,14 @@ struct ForecastBar: View {
     var ink: Color
     var inkSoft: Color
     var inkFaint: Color
+    /// smaller, for the menu bar widget
+    var compact = false
 
     @State private var hoverX: CGFloat?
     @State private var dragging = false
 
     private let maxWidth: CGFloat = 560
-    private let gap: CGFloat = 3
+    private var gap: CGFloat { compact ? 2 : 3 }
     private let padTop: CGFloat = 14
     private let padBottom: CGFloat = 26
     private let lineBottom: CGFloat = 19
@@ -24,16 +26,16 @@ struct ForecastBar: View {
     var body: some View {
         let hours = model.hours
         let skies = hours.map { model.sky(for: $0) }
-        VStack(spacing: 12) {
+        VStack(spacing: compact ? 6 : 12) {
             head(skies)
             GeometryReader { g in
                 track(skies, width: g.size.width, height: g.size.height)
             }
-            .frame(height: active ? 130 : 84)
+            .frame(height: compact ? (active ? 96 : 66) : (active ? 130 : 84))
             .frame(maxWidth: maxWidth)
         }
-        .padding(.horizontal, 24)
-        .padding(.bottom, 18)
+        .padding(.horizontal, compact ? 16 : 24)
+        .padding(.bottom, compact ? 6 : 18)
         .animation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.35), value: active)
         .contextMenu { daysMenu }
     }

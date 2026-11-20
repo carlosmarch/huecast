@@ -37,6 +37,16 @@ It's ad-hoc signed, so the first time, right click it and choose **Open**.
 - **Use as Desktop Wallpaper** (⇧⌘W): the window becomes a live desktop picture
   below your icons, on every Space. ⇧⌘W again (from the Weather menu) brings it back
 - Click the sky to hide the buttons
+- **Menu bar:** a full circle painted with the current sky, with a border in
+  the menu bar's text colour, and the temperature next to it (can be turned off).
+  Click it for a small widget (place, temperature, condition, sun or moon over the
+  live sky); the expand button grows it to the forecast bar, with location,
+  random city and a button to open the window. Closing the window keeps Huecast
+  in the menu bar
+
+Launch options (also used by CI for screenshots):
+`open Huecast.app --args -lat 40.42 -lon -3.70 -name "Madrid, ES"` opens a fixed place;
+`-snapshots <dir>` walks through the widget and saves screenshots there.
 
 ## Files
 
@@ -57,6 +67,8 @@ Sources/Huecast/         the app (SwiftUI + AppKit)
   ForecastBar.swift      the timeline
   Overlays.swift         search, next days
   Picture.swift          save as picture
+  MenuBar.swift          menu bar icon and widget
+  Snapshots.swift        screenshot mode for CI
   LocationProvider.swift CoreLocation
 Support/Info.plist
 build-app.sh
