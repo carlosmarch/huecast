@@ -32,6 +32,13 @@ enum Snapshots {
             try? await Task.sleep(for: .seconds(1.5))
             saveWindows(to: dir, step: "window")
             await step("window", dir)
+
+            if let main = NSApp.windows.first(where: { $0.title == "Huecast" && $0.canBecomeMain }) {
+                main.toggleFullScreen(nil)
+                try? await Task.sleep(for: .seconds(3))
+                saveWindows(to: dir, step: "fullscreen")
+                await step("fullscreen", dir)
+            }
             NSApp.terminate(nil)
         }
     }

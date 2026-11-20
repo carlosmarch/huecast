@@ -33,7 +33,7 @@ jobs:
           SHOTS="$PWD/build/shots"
           mkdir -p "$SHOTS"
           open -n build/Huecast.app --args -lat 18.217 -lon -63.057 -name "The Valley, AI" -snapshots "$SHOTS"
-          for step in widget window; do
+          for step in widget window fullscreen; do
             for i in $(seq 1 90); do [ -f "$SHOTS/$step.ready" ] && break; sleep 1; done
             screencapture -x "$SHOTS/screen-$step.png" || echo "screencapture failed"
             touch "$SHOTS/$step.done"
