@@ -7,9 +7,9 @@ made from **temperature × time of day**, and the weather drawn as particles.
 
 **[Download for MacOS](https://github.com/carlosmarch/huecast/releases/latest/download/Huecast.zip)** · macOS 14 or later · Free
 
-<img src="screenshots/window.jpg" width="100%" alt="The Huecast window on a Mac desktop: an overcast evening sky, the moon and the 24-hour forecast bar">
+<img src="screenshots/window.jpg" width="100%" alt="The Huecast window on a Mac desktop: a snowy morning sky, the veiled sun and the 24-hour forecast bar">
 
-<img src="screenshots/widget.jpg" width="100%" alt="The Huecast menu bar widget open under the sky icon: the temperature, the condition and the moon">
+<img src="screenshots/widget.jpg" width="100%" alt="The Huecast menu bar widget open under the sky icon: the temperature, the condition and the sun">
 
 The menu bar icon in different skies, on a light and a dark menu bar:
 
@@ -84,6 +84,8 @@ The same single keys as the web app, plus ⌘ versions in the **Weather** menu:
 
 Launch options (also used by CI for screenshots):
 `open Huecast.app --args -lat 40.42 -lon -3.70 -name "Madrid, ES"` opens a fixed place;
+`-demo -code 73 -temp -4 -hour 10.5 -name "Helsinki, FI"` shows made-up weather with no
+network (a WMO code, °C and the local hour), like the web app's `?demo`;
 `-snapshots <dir>` walks through the widget and saves screenshots there.
 
 ## Files

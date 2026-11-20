@@ -33,6 +33,7 @@ enum MenuBarIcon {
 
 struct MenuBarLabel: View {
     var model: AppModel
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         // "now", whatever hour the window is scrubbed to
@@ -44,7 +45,10 @@ struct MenuBarLabel: View {
                 Text("\(model.toUnit(ready.hour.temp))°").monospacedDigit()
             }
         }
-        .onAppear { model.start() }
+        .onAppear {
+            model.openMainWindow = { openWindow(id: "main") }
+            model.start()
+        }
     }
 }
 
