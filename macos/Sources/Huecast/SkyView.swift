@@ -60,13 +60,17 @@ struct SkyView: View {
     var body: some View {
         ZStack {
             CSSGradient(from: Tokens.bgRaised, to: Tokens.bg)
+                .ignoresSafeArea()
             ForEach(0..<2, id: \.self) { i in
                 if let p = layers[i] {
                     CSSGradient(from: p.time, to: p.temp)
                         .opacity(active == i ? 1 : 0)
+                        .ignoresSafeArea()
                 }
             }
+            // every layer reaches under the title bar
             Color(Tokens.veil).opacity(darken)
+                .ignoresSafeArea()
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: 2), value: active)
         .animation(reduceMotion ? nil : .easeInOut(duration: 2), value: darken)

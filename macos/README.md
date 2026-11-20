@@ -1,7 +1,19 @@
+<img src="../icons/icon.svg" width="96" alt="Huecast icon">
+
 # Huecast for macOS
 
 A native SwiftUI port of [Huecast](https://huecast.app/): one circle, a gradient
 made from **temperature × time of day**, and the weather drawn as particles.
+
+**[Download for MacOS](https://github.com/carlosmarch/huecast/releases/latest/download/Huecast.zip)** · macOS 14 or later · Free
+
+<img src="screenshots/window.jpg" width="100%" alt="The Huecast window on a Mac desktop: an overcast evening sky, the moon and the 24-hour forecast bar">
+
+<img src="screenshots/widget.jpg" width="100%" alt="The Huecast menu bar widget open under the sky icon: the temperature, the condition and the moon">
+
+The menu bar icon in different skies, on a light and a dark menu bar:
+
+<img src="screenshots/menubar-icons.png" width="100%" alt="The menu bar icon in six skies">
 
 ## Build
 

@@ -42,7 +42,10 @@
         <a href="#changelog">Changelog</a>
         <a href="../how.html">How it works</a>
       </nav>
-      <a class="btn btn--light btn--sm" href="../">Open app</a>
+      <div class="nav__actions">
+        <a class="btn btn--ghost btn--sm nav__mac" href="https://github.com/carlosmarch/huecast/releases/latest/download/Huecast.zip" data-mac-download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></svg>MacOS<span class="ver" data-mac-version></span></a>
+        <a class="btn btn--light btn--sm" href="../">Open app</a>
+      </div>
     </div>
   </header>
 
@@ -53,6 +56,12 @@
       <div class="hero__row">
         <p class="hero__lead">One circle, one sky and a few words. Huecast paints the forecast with colour, light and particles. No photos, no icons.</p>
         <a class="hero__new" href="#explore"><span class="pill">New</span> Explore the world's extremes <span aria-hidden="true">→</span></a>
+      </div>
+
+      <div class="hero__get">
+        <a class="btn btn--light btn--icon" href="https://github.com/carlosmarch/huecast/releases/latest/download/Huecast.zip" data-mac-download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></svg>Download for MacOS</a>
+        <a class="btn btn--ghost" href="../">Open in the browser</a>
+        <p class="hero__meta"><span data-mac-version data-prefix="Version "></span><span>macOS 14 or later · Free</span></p>
       </div>
 
       <div class="window" id="hero-window">
@@ -250,7 +259,7 @@
         <h2>Look up.<br>Available today.</h2>
         <div class="cta__btns">
           <a class="btn btn--light" href="../">Open Huecast</a>
-          <a class="btn btn--ghost" href="https://github.com/carlosmarch/huecast/releases/latest/download/Huecast.zip" title="Huecast for Mac · macOS 14 or later">Download for Mac</a>
+          <a class="btn btn--ghost" href="https://github.com/carlosmarch/huecast/releases/latest/download/Huecast.zip" data-mac-download title="Huecast for macOS 14 or later">Download for MacOS<span class="ver" data-mac-version></span></a>
           <a class="btn btn--ghost" href="../how.html">How it works</a>
         </div>
       </div>
@@ -271,7 +280,7 @@
     <div class="foot__col">
       <h3>Use</h3>
       <a href="../">Open the app</a>
-      <a href="https://github.com/carlosmarch/huecast/releases/latest/download/Huecast.zip">Mac app</a>
+      <a href="https://github.com/carlosmarch/huecast/releases/latest/download/Huecast.zip">MacOS app</a>
       <a href="../?city=random">Random capital</a>
       <a href="../?wallpaper&amp;city=random">Wallpaper</a>
       <a href="../how.html">How it works</a>

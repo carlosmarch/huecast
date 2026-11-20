@@ -415,3 +415,33 @@ document.addEventListener('click', e => {
   if (!a || new URL(a.href).pathname !== new URL('../', location.href).pathname) return;
   try { localStorage.setItem('tc-seen', '1'); } catch {}
 });
+
+/* ======================================================================
+   MAC APP: the version of the latest GitHub release, next to each
+   "Download for Mac" link. CI publishes every build of the default
+   branch as mac-<version>; the links always point at the latest one.
+   ====================================================================== */
+(async function macVersion() {
+  const slots = document.querySelectorAll('[data-mac-version]');
+  if (!slots.length) return;
+  const KEY = 'tc-mac-release';
+  let release = null;
+  try { release = JSON.parse(sessionStorage.getItem(KEY)); } catch {}
+  if (!release) {
+    try {
+      const res = await fetch('https://api.github.com/repos/carlosmarch/huecast/releases/latest', {
+        headers: { Accept: 'application/vnd.github+json' },
+      });
+      if (!res.ok) return;
+      const r = await res.json();
+      const asset = (r.assets || []).find(a => a.name === 'Huecast.zip');
+      release = { version: String(r.tag_name || '').replace(/^mac-/, ''), url: asset?.browser_download_url };
+      try { sessionStorage.setItem(KEY, JSON.stringify(release)); } catch {}
+    } catch {
+      return; // offline or rate limited: the links still work, just no number
+    }
+  }
+  if (!release.version) return;
+  slots.forEach(el => { el.textContent = `${el.dataset.prefix || 'v'}${release.version}`; });
+  if (release.url) document.querySelectorAll('[data-mac-download]').forEach(a => { a.href = release.url; });
+})();
