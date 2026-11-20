@@ -73,16 +73,49 @@ final class DesktopMode {
     }
 
     var isFullScreen: Bool { window?.styleMask.contains(.fullScreen) ?? false }
+    /// the window is the desktop picture right now
+    var isWallpaper: Bool { saved != nil }
 
-    func toggleFullScreen() { window?.toggleFullScreen(nil) }
+    /// no full screen while the window is the desktop picture
+    func toggleFullScreen() {
+        guard !isWallpaper else { return }
+        window?.toggleFullScreen(nil)
+    }
+
+    @ObservationIgnored private var exitObserver: NSObjectProtocol?
 
     func set(_ on: Bool) {
         guard let w = window else { return }
+        // turned off again while still leaving full screen: stay a window
+        if !on, let o = exitObserver {
+            NotificationCenter.default.removeObserver(o)
+            exitObserver = nil
+            return
+        }
+        if on, saved == nil, w.styleMask.contains(.fullScreen) {
+            // A full-screen window lives in its own Space: changing it into a
+            // borderless desktop window there breaks it. Leave full screen
+            // first and become the wallpaper once that's done
+            guard exitObserver == nil else { return }
+            exitObserver = NotificationCenter.default.addObserver(
+                forName: NSWindow.didExitFullScreenNotification, object: w, queue: .main
+            ) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    if let o = self.exitObserver { NotificationCenter.default.removeObserver(o) }
+                    self.exitObserver = nil
+                    self.set(true)
+                }
+            }
+            w.toggleFullScreen(nil)
+            return
+        }
         if on, saved == nil {
             saved = (w.frame, w.styleMask, w.level, w.collectionBehavior)
             w.styleMask = [.borderless, .fullSizeContentView]
             w.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopWindow)))
-            w.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
+            // .fullScreenNone: the green button and ⌃⌘F can't take it full screen
+            w.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle, .fullScreenNone]
             w.ignoresMouseEvents = true
             if let screen = w.screen ?? NSScreen.main { w.setFrame(screen.frame, display: true) }
         } else if !on, let s = saved {
