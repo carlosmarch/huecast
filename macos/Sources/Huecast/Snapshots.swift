@@ -26,12 +26,30 @@ enum Snapshots {
             toggleStatusItem()
             try? await Task.sleep(for: .seconds(2.5))
             saveWindows(to: dir, step: "widget")
+            let widget = NSApp.windows.first { $0.isVisible && $0.title != "Huecast" && $0.frame.width > 60 && $0.frame.height > 60 }
+                .flatMap { capture($0) }
             await step("widget", dir)
 
             toggleStatusItem()
             try? await Task.sleep(for: .seconds(1.5))
             saveWindows(to: dir, step: "window")
             await step("window", dir)
+
+            // marketing pictures: a roomy window, captured at 2x
+            let main = NSApp.windows.first { $0.title == "Huecast" && $0.canBecomeMain }
+            if let main {
+                main.setFrame(NSRect(x: 0, y: 0, width: 1120, height: 720), display: true)
+                try? await Task.sleep(for: .seconds(2))
+            }
+            let window = main.flatMap { capture($0) }
+            let menuIcon = model.forecast?.next.first.map { model.sky(for: $0) }
+            let temp = menuIcon.map { "\(model.toUnit($0.hour.temp))°" } ?? ""
+            if let window, let data = Marketing.render(window: window, widget: nil, icon: menuIcon, temp: temp) {
+                try? data.write(to: dir.appendingPathComponent("marketing-window.png"))
+            }
+            if let widget, let data = Marketing.render(window: nil, widget: widget, icon: menuIcon, temp: temp) {
+                try? data.write(to: dir.appendingPathComponent("marketing-widget.png"))
+            }
 
             if let main = NSApp.windows.first(where: { $0.title == "Huecast" && $0.canBecomeMain }) {
                 main.toggleFullScreen(nil)
@@ -74,6 +92,20 @@ enum Snapshots {
             try? rep.representation(using: .png, properties: [:])?
                 .write(to: dir.appendingPathComponent("\(step)-\(kind)-\(i).png"))
         }
+    }
+
+    /// A window's content at 2x, wherever it is on screen
+    static func capture(_ w: NSWindow, scale: CGFloat = 2) -> NSImage? {
+        guard let view = w.contentView else { return nil }
+        let size = view.bounds.size
+        guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width * scale), pixelsHigh: Int(size.height * scale),
+                                         bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return nil }
+        rep.size = size
+        view.cacheDisplay(in: view.bounds, to: rep)
+        let image = NSImage(size: size)
+        image.addRepresentation(rep)
+        return image
     }
 
     // MARK: - Icon gallery
