@@ -54,11 +54,15 @@ It's ad-hoc signed, so the first time, right click it and choose **Open**.
 - **Use as Desktop Wallpaper** (⇧⌘W): the window becomes a live desktop picture
   below your icons, on every Space. ⇧⌘W again (from the Weather menu) brings it back
 - Click the sky to hide the buttons
+- **Menu bar only:** turn off **Show in Dock** (right click the widget, or the
+  Weather menu) and Huecast has no Dock icon; it keeps running in the menu bar
+  and its window opens from the widget. While it's the desktop wallpaper,
+  clicking the widget brings the window back
 - **Menu bar:** a full circle painted with the current sky, with a border in
   the menu bar's text colour, and the temperature next to it (can be turned off).
   Click it for a small widget: the temperature, the condition and the sun or moon
   over the live sky. Click the widget to open Huecast full screen. Right click it
-  for units, the temperature in the menu bar and Quit. Closing the window keeps
+  for units, the temperature in the menu bar, Show in Dock, Desktop Wallpaper and Quit. Closing the window keeps
   Huecast in the menu bar
 
 ## Keys

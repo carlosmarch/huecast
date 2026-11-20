@@ -56,7 +56,8 @@ struct MenuBarLabel: View {
 
 /// What opens from the menu bar icon: a small sky like a widget with the
 /// temperature, the condition and the sun. Click it to open Huecast full
-/// screen; right click for options
+/// screen (or, while it's the desktop wallpaper, to bring the window back);
+/// right click for options
 struct MenuBarWidget: View {
     var model: AppModel
 
@@ -88,6 +89,11 @@ struct MenuBarWidget: View {
         .contextMenu {
             Toggle("Temperature in Menu Bar", isOn: Binding(get: { model.menuBarTemperature },
                                                              set: { model.menuBarTemperature = $0 }))
+            Toggle("Show in Dock", isOn: Binding(get: { model.showInDock }, set: { model.showInDock = $0 }))
+            Divider()
+            Button("Open Huecast") { openFullScreen() }
+            Button(model.wallpaper ? "Leave Desktop Wallpaper" : "Use as Desktop Wallpaper") { model.wallpaper.toggle() }
+            Divider()
             Picker("Units", selection: Binding(get: { model.unit }, set: { model.unit = $0 })) {
                 Text("°C").tag(TempUnit.c)
                 Text("°F").tag(TempUnit.f)
@@ -121,6 +127,12 @@ struct MenuBarWidget: View {
     /// Closes the widget and opens the Huecast window full screen
     private func openFullScreen() {
         panel?.orderOut(nil)
+        // the wallpaper can't be clicked: the widget brings the window back
+        if model.wallpaper {
+            model.wallpaper = false
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
         openWindow(id: "main")
         NSApp.activate(ignoringOtherApps: true)
         model.select(0)
