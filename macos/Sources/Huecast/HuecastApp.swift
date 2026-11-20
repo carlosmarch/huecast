@@ -23,10 +23,6 @@ struct HuecastApp: App {
                     .keyboardShortcut(.leftArrow)
                 Button("Later Hour") { model.select(model.selected + 1) }
                     .keyboardShortcut(.rightArrow)
-                Divider()
-                Toggle("Temperature in Menu Bar", isOn: Binding(get: { model.menuBarTemperature },
-                                                                 set: { model.menuBarTemperature = $0 }))
-                Toggle("Show in Dock", isOn: Binding(get: { model.showInDock }, set: { model.showInDock = $0 }))
             }
         }
 

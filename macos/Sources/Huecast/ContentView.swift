@@ -347,6 +347,9 @@ struct MenuItems: View {
         Divider()
         Button(model.unit == .c ? "Show °F" : "Show °C") { model.toggleUnit() }
             .shortcut("u", if: shortcuts)
+        Toggle("Temperature in Menu Bar", isOn: Binding(get: { model.menuBarTemperature },
+                                                         set: { model.menuBarTemperature = $0 }))
+        Toggle("Show in Dock", isOn: Binding(get: { model.showInDock }, set: { model.showInDock = $0 }))
         Divider()
         Link("How It Works", destination: URL(string: "https://huecast.app/how.html")!)
         Link("About Huecast", destination: URL(string: "https://huecast.app/product/")!)
