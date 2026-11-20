@@ -20,7 +20,6 @@ struct SunView: View {
 
     var body: some View {
         ZStack {
-            if state.halo > 0 { halo }
             switch state.kind {
             case .loading: loader
             case .empty:
@@ -31,6 +30,8 @@ struct SunView: View {
             }
         }
         .frame(width: size, height: size)
+        // the halo and glow reach far outside the circle without sizing it
+        .background { if state.halo > 0 { halo } }
         .id(state) // a new look pops in, like the web version's popIn
         .transition(.scale(scale: 0.6).combined(with: .opacity))
         .animation(.spring(response: 0.9, dampingFraction: 0.8), value: state)
@@ -39,6 +40,29 @@ struct SunView: View {
     private var sun: some View {
         let i = state.intensity
         return ZStack {
+            if !reduceMotion && i.pulses > 0 {
+                TimelineView(.animation) { t in
+                    let now = t.date.timeIntervalSinceReferenceDate
+                    ZStack {
+                        ForEach(0..<i.pulses, id: \.self) { n in
+                            let p = ((now + Double(n) * i.duration / Double(i.pulses)) / i.duration)
+                                .truncatingRemainder(dividingBy: 1)
+                            let pulse = Self.pulse(p, big: i.big)
+                            Circle().fill(.white)
+                                .frame(width: size, height: size)
+                                .scaleEffect(pulse.scale)
+                                .opacity(pulse.opacity)
+                        }
+                    }
+                }
+            }
+            Circle()
+                .fill(.white.opacity(state.veiled ? 0.78 : 1))
+                .blur(radius: state.veiled ? 1.5 : 0)
+                .overlay(Circle().strokeBorder(.black.opacity(state.edge ? 0.05 : 0), lineWidth: 1))
+        }
+        .frame(width: size, height: size)
+        .background {
             if i.shining {
                 // glow as a radial gradient around the disc
                 let k: CGFloat = i.blazing ? 4 : 3.2
@@ -51,23 +75,6 @@ struct SunView: View {
                     .frame(width: size * k, height: size * k)
                     .allowsHitTesting(false)
             }
-            if !reduceMotion && i.pulses > 0 {
-                TimelineView(.animation) { t in
-                    let now = t.date.timeIntervalSinceReferenceDate
-                    ZStack {
-                        ForEach(0..<i.pulses, id: \.self) { n in
-                            let p = ((now + Double(n) * i.duration / Double(i.pulses)) / i.duration)
-                                .truncatingRemainder(dividingBy: 1)
-                            let pulse = Self.pulse(p, big: i.big)
-                            Circle().fill(.white).scaleEffect(pulse.scale).opacity(pulse.opacity)
-                        }
-                    }
-                }
-            }
-            Circle()
-                .fill(.white.opacity(state.veiled ? 0.78 : 1))
-                .blur(radius: state.veiled ? 1.5 : 0)
-                .overlay(Circle().strokeBorder(.black.opacity(state.edge ? 0.05 : 0), lineWidth: 1))
         }
     }
 

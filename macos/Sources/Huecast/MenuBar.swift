@@ -185,7 +185,8 @@ struct MenuBarWidget: View {
                 Image(systemName: "ellipsis").font(.system(size: 12, weight: .semibold))
                     .frame(width: 28, height: 28)
             }
-            .menuStyle(.borderlessButton)
+            .menuStyle(.button)
+            .buttonStyle(.plain)
             .menuIndicator(.hidden)
             .fixedSize()
             .background(ink.main.opacity(0.12), in: Circle())

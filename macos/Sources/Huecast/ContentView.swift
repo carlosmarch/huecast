@@ -245,7 +245,8 @@ struct ContentView: View {
                         .frame(width: 40, height: 40)
                         .contentShape(Circle())
                 }
-                .menuStyle(.borderlessButton)
+                .menuStyle(.button)
+            .buttonStyle(.plain)
                 .menuIndicator(.hidden)
                 .fixedSize()
                 .glassCircle()

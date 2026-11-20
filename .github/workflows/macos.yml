@@ -32,7 +32,7 @@ jobs:
         run: |
           SHOTS="$PWD/build/shots"
           mkdir -p "$SHOTS"
-          open -n build/Huecast.app --args -lat 40.42 -lon -3.70 -name "Madrid, ES" -snapshots "$SHOTS"
+          open -n build/Huecast.app --args -lat 18.217 -lon -63.057 -name "The Valley, AI" -snapshots "$SHOTS"
           for step in compact expanded window; do
             for i in $(seq 1 90); do [ -f "$SHOTS/$step.ready" ] && break; sleep 1; done
             screencapture -x "$SHOTS/screen-$step.png" || echo "screencapture failed"
