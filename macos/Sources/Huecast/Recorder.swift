@@ -6,12 +6,16 @@ import HuecastCore
 /// Normally the real time; while recording, a virtual time that steps one
 /// frame at a time, so a video plays smoothly however long each frame
 /// takes to capture
-enum AnimationClock {
-    // set and read on the main thread only (the recorder, SwiftUI drawing)
-    nonisolated(unsafe) static var virtual: Double?
+/// Observable, so each step invalidates the views that read it: a timeline
+/// doesn't tick on its own while frames are captured one by one
+@MainActor
+@Observable
+final class AnimationClock {
+    static let shared = AnimationClock()
+    var virtual: Double?
 
     static func time(_ date: Date) -> Double {
-        virtual ?? date.timeIntervalSinceReferenceDate
+        shared.virtual ?? date.timeIntervalSinceReferenceDate
     }
 }
 
@@ -111,13 +115,13 @@ enum Recorder {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let frames = Int(seconds * fps)
         var t = Date().timeIntervalSinceReferenceDate
-        AnimationClock.virtual = t
+        AnimationClock.shared.virtual = t
         // let the particles settle onto the virtual clock
         try? await Task.sleep(for: .milliseconds(300))
         for i in 0..<frames {
             each?(Double(i) / fps)
             t += 1 / fps
-            AnimationClock.virtual = t
+            AnimationClock.shared.virtual = t
             // a few display refreshes so the views redraw at the new time
             try? await Task.sleep(for: .milliseconds(50))
             guard let rep = capture(w, scale: scale) else { continue }
@@ -130,7 +134,7 @@ enum Recorder {
                 pending.leave()
             }
         }
-        AnimationClock.virtual = nil
+        AnimationClock.shared.virtual = nil
     }
 
     private static func capture(_ w: NSWindow, scale: CGFloat) -> NSBitmapImageRep? {
