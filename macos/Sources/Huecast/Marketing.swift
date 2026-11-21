@@ -3,7 +3,7 @@ import HuecastCore
 
 /// Marketing pictures for the screenshot mode: Huecast on a Mac desktop.
 /// A soft gradient in Huecast's own colours, a menu bar with the Huecast
-/// icon, a Dock with Finder, Photos and Huecast, and either the window
+/// icon, a Dock with just Finder and Huecast, and either the window
 /// floating in the middle, the menu bar widget open, or Huecast as the
 /// desktop picture itself. 1440x900 at 2x
 @MainActor
@@ -152,7 +152,6 @@ enum Marketing {
     private static func drawDock() {
         let apps: [(NSImage, Bool)] = [
             (NSWorkspace.shared.icon(forFile: "/System/Library/CoreServices/Finder.app"), true),
-            (NSWorkspace.shared.icon(forFile: "/System/Applications/Photos.app"), false),
             (NSApp.applicationIconImage ?? NSImage(), true),
         ]
         let iconSize: CGFloat = 60, gap: CGFloat = 10, pad: CGFloat = 10
