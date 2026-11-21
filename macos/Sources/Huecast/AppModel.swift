@@ -342,20 +342,41 @@ final class AppModel {
     /// at either end: the next 24 hours and the coming days are one
     /// continuous timeline for the arrow keys
     func step(_ d: Int) {
-        guard let f = forecast, status == .ready, !hours.isEmpty else { return }
+        guard forecast != nil, status == .ready, !hours.isEmpty else { return }
         let i = selected + d
         if hours.indices.contains(i) { select(i); return }
-        let target = hours[min(selected, hours.count - 1)].time + Double(d) * 3600
-        // the day (or the next 24 hours) that has the hour just past the edge
+        jump(by: Double(d) * 3600, direction: d)
+    }
+
+    /// The same hour a day later or earlier (⇧⌘→ ⇧⌘←), on that day's
+    /// timeline; back to the next 24 hours before tomorrow
+    func stepDay(_ d: Int) {
+        guard forecast != nil, status == .ready, !hours.isEmpty else { return }
+        if !jump(by: Double(d) * 86400, direction: d), d < 0, viewDay != nil {
+            rollDirection = -1
+            viewDay = nil
+            selected = 0
+        }
+    }
+
+    /// Moves to the hour `seconds` away from the selected one, on the day
+    /// (or the next 24 hours) that has it, other views first
+    @discardableResult
+    private func jump(by seconds: Double, direction d: Int) -> Bool {
+        guard let f = forecast, !hours.isEmpty else { return false }
+        let target = hours[min(selected, hours.count - 1)].time + seconds
         let views: [(time: Double?, hours: [Hour])] = f.days.map { ($0.time, $0.hours) } + [(nil, f.next)]
-        for v in views where v.time != viewDay {
-            if let j = v.hours.firstIndex(where: { abs($0.time - target) < 60 }) {
+        let ordered = views.filter { $0.time != viewDay } + views.filter { $0.time == viewDay }
+        for v in ordered {
+            // within half an hour: "now" isn't on the hour
+            if let j = v.hours.firstIndex(where: { abs($0.time - target) < 1800 }) {
                 rollDirection = d > 0 ? 1 : -1
                 viewDay = v.time
                 selected = j
-                return
+                return true
             }
         }
+        return false
     }
 
     func select(_ i: Int) {

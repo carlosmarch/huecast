@@ -23,6 +23,10 @@ struct HuecastApp: App {
                     .keyboardShortcut(.leftArrow)
                 Button("Later Hour") { model.step(1) }
                     .keyboardShortcut(.rightArrow)
+                Button("Previous Day") { model.stepDay(-1) }
+                    .keyboardShortcut(.leftArrow, modifiers: [.command, .shift])
+                Button("Next Day") { model.stepDay(1) }
+                    .keyboardShortcut(.rightArrow, modifiers: [.command, .shift])
             }
         }
 
