@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import ServiceManagement
 import HuecastCore
 
 /// Everything the sky shows for one forecast hour. Shared by the big sky
@@ -51,6 +52,30 @@ final class AppModel {
     var wallpaper = false
     var toast: String?
     /// the temperature next to the menu bar icon
+    /// Huecast starts with the computer, so each login finds where you are.
+    /// Mirrors System Settings > General > Login Items
+    var openAtLogin = SMAppService.mainApp.status == .enabled {
+        didSet {
+            guard openAtLogin != (SMAppService.mainApp.status == .enabled) else { return }
+            do {
+                if openAtLogin { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+            } catch {
+                openAtLogin = SMAppService.mainApp.status == .enabled
+                showToast("Couldn't change Open at Login")
+            }
+        }
+    }
+
+    /// Turned on once, the first time Huecast runs from an app bundle
+    /// (a bare `swift run` binary can't be a login item)
+    func setUpOpenAtLoginOnce() {
+        let key = "openAtLoginSetUp"
+        guard !UserDefaults.standard.bool(forKey: key), Bundle.main.bundleIdentifier != nil,
+              Bundle.main.bundleURL.pathExtension == "app" else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        openAtLogin = true
+    }
+
     /// off: Huecast lives in the menu bar only, with no Dock icon
     var showInDock = UserDefaults.standard.object(forKey: "showInDock") as? Bool ?? true {
         didSet {
@@ -156,6 +181,7 @@ final class AppModel {
     func start() {
         guard !started else { return }
         started = true
+        if !CommandLine.arguments.contains("-demo"), Snapshots.directory == nil { setUpOpenAtLoginOnce() }
         if CommandLine.arguments.contains("-demo") {
             startDemo()
         } else if let lat = Self.argument("-lat").flatMap({ Double($0) }), let lon = Self.argument("-lon").flatMap({ Double($0) }) {

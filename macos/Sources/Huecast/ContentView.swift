@@ -350,6 +350,7 @@ struct MenuItems: View {
         Toggle("Temperature in Menu Bar", isOn: Binding(get: { model.menuBarTemperature },
                                                          set: { model.menuBarTemperature = $0 }))
         Toggle("Show in Dock", isOn: Binding(get: { model.showInDock }, set: { model.showInDock = $0 }))
+        Toggle("Open at Login", isOn: Binding(get: { model.openAtLogin }, set: { model.openAtLogin = $0 }))
         Divider()
         Link("How It Works", destination: URL(string: "https://huecast.app/how.html")!)
         Link("About Huecast", destination: URL(string: "https://huecast.app/product/")!)
