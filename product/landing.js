@@ -398,6 +398,23 @@ if (!reduceMotion.matches) {
 }
 
 /* ======================================================================
+   MAC VIDEO: plays while it's on screen. With reduced motion it stays on
+   its poster, with controls to play it by hand
+   ====================================================================== */
+const macVideo = $('#mac-video');
+if (macVideo) {
+  if (reduceMotion.matches || !('IntersectionObserver' in window)) {
+    macVideo.controls = true;
+    macVideo.preload = 'metadata';
+  } else {
+    new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) macVideo.play().catch(() => { macVideo.controls = true; });
+      else macVideo.pause();
+    }, { threshold: 0.35 }).observe(macVideo);
+  }
+}
+
+/* ======================================================================
    Reveal sections as they scroll in
    ====================================================================== */
 if (!reduceMotion.matches && 'IntersectionObserver' in window) {
