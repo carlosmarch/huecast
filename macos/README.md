@@ -88,7 +88,7 @@ The same single keys as the web app, plus ⌘ versions in the **Weather** menu:
 | Hide the buttons | `H` | |
 | Full screen | `F` | ⌃⌘F |
 | How it works | `?` | |
-| Forecast hours | `←` `→` `Home` `End` | ⌘← ⌘→ |
+| Forecast hours (hold to run on into the next days; also on the desktop wallpaper) | `←` `→` `Home` `End` | ⌘← ⌘→ |
 | Close, leave full screen | `Esc` | |
 
 Launch options (also used by CI for screenshots):
