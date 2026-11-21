@@ -415,6 +415,18 @@ code { font-size: 0.92em; padding: 1px 5px; border-radius: 4px; background: rgba
 .subs p { margin: 2px 0 0; font-size: 14px; color: var(--text-soft); }
 @media (max-width: 640px) { .subs { grid-template-columns: 1fr; gap: 18px; } }
 
+/* ---- Mac app video ---- */
+.panel--video { padding: 12px; }
+.mac-video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  background: var(--bg);
+  object-fit: cover;
+}
+
 /* ---- Sky stage (gradient + canvas + orb) ---- */
 .stage,
 .trio__art,
