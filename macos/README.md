@@ -11,6 +11,8 @@ made from **temperature × time of day**, and the weather drawn as particles.
 
 <img src="screenshots/widget.jpg" width="100%" alt="The Huecast menu bar widget open under the sky icon: the temperature, the condition and the moon">
 
+<img src="screenshots/wallpaper.jpg" width="100%" alt="Huecast as the desktop wallpaper: heavy snow at night and the moon fill the screen, under the menu bar and the Dock">
+
 The menu bar icon in different skies, on a light and a dark menu bar:
 
 <img src="screenshots/menubar-icons.png" width="100%" alt="The menu bar icon in six skies">
