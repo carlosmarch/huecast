@@ -23,12 +23,12 @@ final class AnimationClock {
 /// (with `-demo …`). Records each shot as a numbered JPEG sequence at 30
 /// frames a second of animation time, in `<dir>/<shot>/`:
 ///
-/// - widget: the menu bar widget, at 4x. Also saves the menu bar icon
-///   for the current sky as `menubar-icon.png`
+/// - widget: the menu bar widget, at 4x
 /// - window: the window at 2x; with `-scrub` it drags through the
 ///   forecast hours like a pointer would
 /// - wallpaper: Huecast as the desktop picture, 1440x900 at 1.5x
 ///
+/// Also saves the menu bar icon for the sky as `menubar-icon.png`.
 /// Writes `<dir>/finished` and quits when done
 @MainActor
 enum Recorder {
@@ -46,6 +46,10 @@ enum Recorder {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
         Task {
+            // the menu bar icon for this sky, for every scene
+            if let now = model.forecast?.next.first {
+                savePNG(icon(model.sky(for: now)), to: dir.appendingPathComponent("menubar-icon.png"))
+            }
             try? await Task.sleep(for: .seconds(3))
             for shot in shots {
                 switch shot {
@@ -64,9 +68,6 @@ enum Recorder {
     // MARK: - Shots
 
     private static func widget(_ model: AppModel, _ dir: URL, _ seconds: Double) async {
-        if let now = model.forecast?.next.first {
-            savePNG(icon(model.sky(for: now)), to: dir.appendingPathComponent("menubar-icon.png"))
-        }
         toggleStatusItem()
         try? await Task.sleep(for: .seconds(2.5))
         guard let w = NSApp.windows.first(where: { $0.isVisible && $0.title != "Huecast" && $0.frame.width > 60 && $0.frame.height > 60 })
