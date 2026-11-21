@@ -81,6 +81,7 @@ jobs:
       - name: Record
         continue-on-error: true
         run: |
+          echo "Reduce Motion: $(defaults read com.apple.universalaccess reduceMotion 2>&1)"
           rec() {
             OUT="$PWD/build/recording/$1"; shift
             mkdir -p "$OUT"

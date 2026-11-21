@@ -16,7 +16,10 @@ struct SunView: View {
     var state: SunState
     var size: CGFloat = 104
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    /// Reduce Motion, except in record mode (a video has to move, and CI
+    /// machines can have Reduce Motion on)
+    private var reduceMotion: Bool { systemReduceMotion && Recorder.directory == nil }
 
     var body: some View {
         ZStack {

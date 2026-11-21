@@ -20,7 +20,10 @@ struct SceneView: View {
     var anchor: ClosedRange<CGFloat>
 
     @State private var engine = SceneEngine()
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    /// Reduce Motion, except in record mode (a video has to move, and CI
+    /// machines can have Reduce Motion on)
+    private var reduceMotion: Bool { systemReduceMotion && Recorder.directory == nil }
 
     var body: some View {
         Clocked(paused: reduceMotion) { time in
