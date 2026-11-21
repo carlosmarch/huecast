@@ -17,6 +17,7 @@ struct ContentView: View {
     /// click the sky: the buttons and the low · now · high row slide away
     @State private var clean = false
     @FocusState private var focused: Bool
+    @State private var wallpaperKeys: Any?
 
     var body: some View {
         let cur = model.current
@@ -81,10 +82,16 @@ struct ContentView: View {
         .focusable()
         .focusEffectDisabled()
         .focused($focused)
-        .onKeyPress(phases: .down) { key(Shortcut.from($0)) }
+        // held arrows repeat; other keys act once
+        .onKeyPress(phases: [.down, .repeat]) { press in
+            let k = Shortcut.from(press)
+            if press.phase == .repeat, k != .left, k != .right { return k == nil ? .ignored : .handled }
+            return key(k)
+        }
         .onAppear {
             focused = true
             model.start()
+            installWallpaperKeys()
         }
         .onChange(of: model.showSearch) { _, open in if !open { focused = true } }
         .onChange(of: model.showDays) { _, open in if !open { focused = true } }
@@ -93,6 +100,25 @@ struct ContentView: View {
             if on { clean = false }
         }
         .background(WindowFinder { desktop.adopt($0) })
+    }
+
+    /// The desktop wallpaper can't take keyboard focus, so while Huecast is
+    /// the active app (Dock icon, ⌘-Tab or the menu bar widget) the arrow
+    /// keys, held or not, move its sky through the hours and days
+    private func installWallpaperKeys() {
+        guard wallpaperKeys == nil else { return }
+        wallpaperKeys = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [model, desktop] event in
+            // local monitors run on the main thread
+            MainActor.assumeIsolated { () -> NSEvent? in
+                guard desktop.isWallpaper,
+                      event.modifierFlags.isDisjoint(with: [.command, .control, .option]) else { return event }
+                switch event.keyCode {
+                case 123: model.step(-1); return nil // ←
+                case 124: model.step(1); return nil  // →
+                default: return event
+                }
+            }
+        }
     }
 
     /// Single-key shortcuts, the same as the web app (the menu bar has the
@@ -111,8 +137,8 @@ struct ContentView: View {
             if clean { withAnimation(.easeOut(duration: 0.35)) { clean = false } }
             else if desktop.isFullScreen { desktop.toggleFullScreen() }
             else { return .ignored }
-        case .left: guard ready else { return .ignored }; model.select(model.selected - 1)
-        case .right: guard ready else { return .ignored }; model.select(model.selected + 1)
+        case .left: guard ready else { return .ignored }; model.step(-1)
+        case .right: guard ready else { return .ignored }; model.step(1)
         case .home: model.select(0)
         case .end: model.select(model.hours.count - 1)
         case .search: model.showSearch = true

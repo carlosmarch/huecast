@@ -338,6 +338,26 @@ final class AppModel {
 
     // MARK: - Timeline
 
+    /// One hour earlier or later, carrying on into the previous or next day
+    /// at either end: the next 24 hours and the coming days are one
+    /// continuous timeline for the arrow keys
+    func step(_ d: Int) {
+        guard let f = forecast, status == .ready, !hours.isEmpty else { return }
+        let i = selected + d
+        if hours.indices.contains(i) { select(i); return }
+        let target = hours[min(selected, hours.count - 1)].time + Double(d) * 3600
+        // the day (or the next 24 hours) that has the hour just past the edge
+        let views: [(time: Double?, hours: [Hour])] = f.days.map { ($0.time, $0.hours) } + [(nil, f.next)]
+        for v in views where v.time != viewDay {
+            if let j = v.hours.firstIndex(where: { abs($0.time - target) < 60 }) {
+                rollDirection = d > 0 ? 1 : -1
+                viewDay = v.time
+                selected = j
+                return
+            }
+        }
+    }
+
     func select(_ i: Int) {
         let i = min(max(i, 0), max(hours.count - 1, 0))
         guard i != selected else { return }

@@ -19,9 +19,9 @@ struct HuecastApp: App {
             CommandMenu("Weather") {
                 MenuItems(model: model)
                 Divider()
-                Button("Earlier Hour") { model.select(model.selected - 1) }
+                Button("Earlier Hour") { model.step(-1) }
                     .keyboardShortcut(.leftArrow)
-                Button("Later Hour") { model.select(model.selected + 1) }
+                Button("Later Hour") { model.step(1) }
                     .keyboardShortcut(.rightArrow)
             }
         }
