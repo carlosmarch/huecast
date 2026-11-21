@@ -41,8 +41,7 @@ struct SunView: View {
         let i = state.intensity
         return ZStack {
             if !reduceMotion && i.pulses > 0 {
-                TimelineView(.animation) { t in
-                    let now = AnimationClock.time(t.date)
+                Clocked { now in
                     ZStack {
                         ForEach(0..<i.pulses, id: \.self) { n in
                             let p = ((now + Double(n) * i.duration / Double(i.pulses)) / i.duration)
@@ -79,9 +78,9 @@ struct SunView: View {
     }
 
     private var moon: some View {
-        TimelineView(.animation(paused: reduceMotion)) { t in
+        Clocked(paused: reduceMotion) { now in
             // opacityMoon: 1 -> 0.9 -> 0.6 -> 1 every 3s
-            let p = AnimationClock.time(t.date).truncatingRemainder(dividingBy: 3) / 3
+            let p = now.truncatingRemainder(dividingBy: 3) / 3
             let o = reduceMotion ? 1 : Self.keyframes(p, [(0, 1), (0.5, 0.9), (0.6, 0.6), (1, 1)])
             Circle()
                 .fill(.white.opacity(0.2))
@@ -94,8 +93,8 @@ struct SunView: View {
     /// white, cool outer edge), breathing slowly
     private var halo: some View {
         let d = size * 2.9
-        return TimelineView(.animation(paused: reduceMotion)) { t in
-            let breathe = reduceMotion ? 1 : 0.85 + 0.15 * cos(AnimationClock.time(t.date) * .pi / 7)
+        return Clocked(paused: reduceMotion) { now in
+            let breathe = reduceMotion ? 1 : 0.85 + 0.15 * cos(now * .pi / 7)
             Circle()
                 .fill(RadialGradient(stops: [
                     .init(color: .clear, location: 0.8),
@@ -112,8 +111,7 @@ struct SunView: View {
 
     /// The app icon at the size of the sun, its sun breathing
     private var loader: some View {
-        TimelineView(.animation(paused: reduceMotion)) { t in
-            let now = AnimationClock.time(t.date)
+        Clocked(paused: reduceMotion) { now in
             let breathe = 1 + 0.06 * sin(now * 2 * .pi / 2.4)
             let drift = sin(now * .pi / 3) * size * 0.04
             ZStack {

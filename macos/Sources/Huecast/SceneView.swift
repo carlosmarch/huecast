@@ -23,9 +23,7 @@ struct SceneView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        TimelineView(.animation(paused: reduceMotion)) { timeline in
-            // read here, in the view's body, so a recording step redraws it
-            let time = AnimationClock.time(timeline.date)
+        Clocked(paused: reduceMotion) { time in
             Canvas { ctx, size in
                 engine.draw(ctx, size: size, time: time, still: reduceMotion)
             }

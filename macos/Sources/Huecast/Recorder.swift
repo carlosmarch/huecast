@@ -19,6 +19,24 @@ final class AnimationClock {
     }
 }
 
+/// A TimelineView that follows the recording clock: it reads the virtual
+/// time in its own body, so each recording step redraws it. Otherwise
+/// it's a plain `.animation` timeline. `content` gets seconds
+struct Clocked<Content: View>: View {
+    var paused = false
+    @ViewBuilder var content: (Double) -> Content
+
+    var body: some View {
+        if let time = AnimationClock.shared.virtual {
+            content(time)
+        } else {
+            TimelineView(.animation(paused: paused)) { t in
+                content(t.date.timeIntervalSinceReferenceDate)
+            }
+        }
+    }
+}
+
 /// Video mode, used by CI: `-record <dir> -shots widget,window,wallpaper`
 /// (with `-demo …`). Records each shot as a numbered JPEG sequence at 30
 /// frames a second of animation time, in `<dir>/<shot>/`:
