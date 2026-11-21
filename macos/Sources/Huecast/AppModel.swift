@@ -220,11 +220,13 @@ final class AppModel {
             status = .ready
             if remember { Self.save(p, Keys.place) }
             if Snapshots.directory != nil { Snapshots.run(self) }
+            if Recorder.directory != nil { Recorder.run(self) }
         } catch {
             guard !Task.isCancelled, place == newPlace else { return }
             let message = (error as? URLError)?.code == .notConnectedToInternet ? "offline" : "no signal"
             status = .failed(message, detail: String(error.localizedDescription.prefix(120)))
             if Snapshots.directory != nil { Snapshots.run(self) }
+            if Recorder.directory != nil { Recorder.run(self) }
         }
     }
 
@@ -288,6 +290,7 @@ final class AppModel {
         clock = Date()
         status = .ready
         if Snapshots.directory != nil { Snapshots.run(self) }
+        if Recorder.directory != nil { Recorder.run(self) }
     }
 
     /// one more try after a timeout or a dropped connection

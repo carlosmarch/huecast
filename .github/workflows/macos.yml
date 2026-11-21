@@ -76,3 +76,24 @@ jobs:
         with:
           name: Huecast-screenshots
           path: macos/build/shots
+      # Video frames: the app steps its animation clock one frame at a time
+      # and saves each shot as a JPEG sequence (30 fps), then quits
+      - name: Record
+        continue-on-error: true
+        run: |
+          rec() {
+            OUT="$PWD/build/recording/$1"; shift
+            mkdir -p "$OUT"
+            open -n build/Huecast.app --args -demo "$@" -record "$OUT"
+            for i in $(seq 1 400); do [ -f "$OUT/finished" ] && break; sleep 1; done
+            pkill -x Huecast || true
+            sleep 2
+          }
+          rec snow-night  -code 75 -temp -2 -hour 1.5  -name "Helsinki, FI" -shots widget,window -seconds 8 -scrub
+          rec storm-dusk  -code 95 -temp 24 -hour 19.5 -name "Miami, US" -shots wallpaper,window -seconds 6
+          rec hot-noon    -code 0  -temp 34 -hour 13   -name "Seville, ES" -shots wallpaper -seconds 6
+          find build/recording -type d -exec sh -c 'echo "$1: $(ls "$1" | wc -l)"' _ {} \;
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Huecast-recording
+          path: macos/build/recording

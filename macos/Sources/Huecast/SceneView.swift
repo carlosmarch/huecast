@@ -25,7 +25,7 @@ struct SceneView: View {
     var body: some View {
         TimelineView(.animation(paused: reduceMotion)) { timeline in
             Canvas { ctx, size in
-                engine.draw(ctx, size: size, time: timeline.date.timeIntervalSinceReferenceDate, still: reduceMotion)
+                engine.draw(ctx, size: size, time: AnimationClock.time(timeline.date), still: reduceMotion)
             }
             .ignoresSafeArea()
         }
