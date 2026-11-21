@@ -58,6 +58,21 @@ enum Snapshots {
                 try? data.write(to: dir.appendingPathComponent("marketing-widget.png"))
             }
 
+            // Huecast as the desktop wallpaper: just the sky and the circle,
+            // sized like the marketing screen and captured at 2x
+            model.wallpaper = true
+            try? await Task.sleep(for: .seconds(2))
+            if let main = NSApp.windows.first(where: { $0.title == "Huecast" }) {
+                main.setFrame(NSRect(origin: .zero, size: Marketing.size), display: true)
+                try? await Task.sleep(for: .seconds(2.5))
+                if let sky = capture(main),
+                   let data = Marketing.render(window: nil, widget: nil, icon: menuIcon, temp: temp, desktop: sky) {
+                    try? data.write(to: dir.appendingPathComponent("marketing-wallpaper.png"))
+                }
+            }
+            model.wallpaper = false
+            try? await Task.sleep(for: .seconds(2))
+
             if let main = NSApp.windows.first(where: { $0.title == "Huecast" && $0.canBecomeMain }) {
                 main.toggleFullScreen(nil)
                 try? await Task.sleep(for: .seconds(3))

@@ -4,13 +4,14 @@ import HuecastCore
 /// Marketing pictures for the screenshot mode: Huecast on a Mac desktop.
 /// A soft gradient in Huecast's own colours, a menu bar with the Huecast
 /// icon, a Dock with Finder, Photos and Huecast, and either the window
-/// floating in the middle or the menu bar widget open. 1440x900 at 2x
+/// floating in the middle, the menu bar widget open, or Huecast as the
+/// desktop picture itself. 1440x900 at 2x
 @MainActor
 enum Marketing {
     static let size = CGSize(width: 1440, height: 900)
     static let menuBar: CGFloat = 26
 
-    static func render(window: NSImage?, widget: NSImage?, icon: HourSky?, temp: String) -> Data? {
+    static func render(window: NSImage?, widget: NSImage?, icon: HourSky?, temp: String, desktop: NSImage? = nil) -> Data? {
         let scale: CGFloat = 2
         guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width * scale), pixelsHigh: Int(size.height * scale),
                                          bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
@@ -21,7 +22,8 @@ enum Marketing {
         NSGraphicsContext.current?.imageInterpolation = .high
 
         NSAppearance(named: .darkAqua)!.performAsCurrentDrawingAppearance {
-            background()
+            // Huecast itself as the desktop picture, or the soft gradient
+            if let desktop { desktop.draw(in: NSRect(origin: .zero, size: size)) } else { background() }
             let iconFrame = drawMenuBar(icon: icon, temp: temp)
             if let window { drawWindow(window) }
             if let widget { drawWidget(widget, under: iconFrame) }
