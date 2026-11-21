@@ -109,7 +109,7 @@ struct ContentView: View {
         guard wallpaperKeys == nil else { return }
         wallpaperKeys = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [model, desktop] event in
             // local monitors run on the main thread
-            MainActor.assumeIsolated {
+            MainActor.assumeIsolated { () -> NSEvent? in
                 guard desktop.isWallpaper,
                       event.modifierFlags.isDisjoint(with: [.command, .control, .option]) else { return event }
                 switch event.keyCode {
