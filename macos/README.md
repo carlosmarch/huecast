@@ -56,6 +56,9 @@ It's ad-hoc signed, so the first time, right click it and choose **Open**.
 - **Use as Desktop Wallpaper** (⇧⌘W): the window becomes a live desktop picture
   below your icons, on every Space. ⇧⌘W again (from the Weather menu) brings it back
 - Click the sky to hide the buttons
+- **Open at Login** (on from the first launch; gear menu, Weather menu or the
+  widget's right click to turn it off): Huecast starts with the computer and
+  finds where you are, so after a trip it shows the city you're in
 - **Menu bar only:** turn off **Show in Dock** (right click the widget, or the
   Weather menu) and Huecast has no Dock icon; it keeps running in the menu bar
   and its window opens from the widget. While it's the desktop wallpaper,

@@ -90,6 +90,7 @@ struct MenuBarWidget: View {
             Toggle("Temperature in Menu Bar", isOn: Binding(get: { model.menuBarTemperature },
                                                              set: { model.menuBarTemperature = $0 }))
             Toggle("Show in Dock", isOn: Binding(get: { model.showInDock }, set: { model.showInDock = $0 }))
+            Toggle("Open at Login", isOn: Binding(get: { model.openAtLogin }, set: { model.openAtLogin = $0 }))
             Divider()
             Button("Open Huecast") { openFullScreen() }
             Button(model.wallpaper ? "Leave Desktop Wallpaper" : "Use as Desktop Wallpaper") { model.wallpaper.toggle() }
