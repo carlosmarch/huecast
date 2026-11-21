@@ -84,8 +84,20 @@ jobs:
           rec() {
             OUT="$PWD/build/recording/$1"; shift
             mkdir -p "$OUT"
+            # answers the app's requests: the window as the screen shows it
+            (
+              set +e
+              while [ ! -f "$OUT/finished" ]; do
+                if [ -f "$OUT/req" ]; then
+                  read -r id path < "$OUT/req"
+                  screencapture -x -o -t jpg -l "$id" "$path"
+                  rm -f "$OUT/req"
+                fi
+                sleep 0.02
+              done
+            ) &
             open -n build/Huecast.app --args -demo "$@" -record "$OUT"
-            for i in $(seq 1 400); do [ -f "$OUT/finished" ] && break; sleep 1; done
+            for i in $(seq 1 600); do [ -f "$OUT/finished" ] && break; sleep 1; done
             pkill -x Huecast || true
             sleep 2
           }

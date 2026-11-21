@@ -27,12 +27,10 @@ struct Clocked<Content: View>: View {
     @ViewBuilder var content: (Double) -> Content
 
     var body: some View {
-        if let time = AnimationClock.shared.virtual {
-            content(time)
-        } else {
-            TimelineView(.animation(paused: paused)) { t in
-                content(t.date.timeIntervalSinceReferenceDate)
-            }
+        // read in the body (observed) and in every tick of the timeline
+        let recording = AnimationClock.shared.virtual != nil
+        TimelineView(.animation(paused: paused && !recording)) { t in
+            content(AnimationClock.shared.virtual ?? t.date.timeIntervalSinceReferenceDate)
         }
     }
 }
@@ -44,7 +42,12 @@ struct Clocked<Content: View>: View {
 /// - widget: the menu bar widget, at 4x
 /// - window: the window at 2x; with `-scrub` it drags through the
 ///   forecast hours like a pointer would
-/// - wallpaper: Huecast as the desktop picture, 1440x900 at 1.5x
+/// - wallpaper: Huecast as the desktop picture, filling the screen
+///
+/// Each frame is saved twice: drawn by the app (`<shot>/`, sharp) and as
+/// the window server shows it (`<shot>-screen/`, at the screen's scale).
+/// For the second, the app writes `<dir>/req` ("<window number> <path>")
+/// and waits for a script to run `screencapture -l` and delete it
 ///
 /// Also saves the menu bar icon for the sky as `menubar-icon.png`.
 /// Writes `<dir>/finished` and quits when done
@@ -97,7 +100,10 @@ enum Recorder {
 
     private static func window(_ model: AppModel, _ dir: URL, _ seconds: Double) async {
         guard let main = await mainWindow(model) else { return }
-        main.setFrame(NSRect(x: 0, y: 0, width: 1200, height: 760), display: true)
+        // fits a small CI screen, so the window server has all of it
+        let screen = main.screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1024, height: 740)
+        let width = min(1000, screen.width), height = (width * 0.57).rounded()
+        main.setFrame(NSRect(x: screen.minX, y: screen.maxY - height, width: width, height: height), display: true)
         model.select(0)
         try? await Task.sleep(for: .seconds(2.5))
         let scrub = CommandLine.arguments.contains("-scrub")
@@ -118,9 +124,8 @@ enum Recorder {
         model.select(0)
         model.wallpaper = true
         try? await Task.sleep(for: .seconds(2))
-        main.setFrame(NSRect(origin: .zero, size: Marketing.size), display: true)
         try? await Task.sleep(for: .seconds(2.5))
-        await record(main, scale: 1.5, seconds: seconds, to: dir.appendingPathComponent("wallpaper"))
+        await record(main, scale: 2, seconds: seconds, to: dir.appendingPathComponent("wallpaper"))
         model.wallpaper = false
         try? await Task.sleep(for: .seconds(1))
     }
@@ -132,6 +137,8 @@ enum Recorder {
     private static func record(_ w: NSWindow, scale: CGFloat, seconds: Double, to dir: URL,
                                each: ((Double) -> Void)? = nil) async {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let screenDir = dir.deletingLastPathComponent().appendingPathComponent(dir.lastPathComponent + "-screen")
+        try? FileManager.default.createDirectory(at: screenDir, withIntermediateDirectories: true)
         let frames = Int(seconds * fps)
         var t = Date().timeIntervalSinceReferenceDate
         AnimationClock.shared.virtual = t
@@ -143,8 +150,10 @@ enum Recorder {
             AnimationClock.shared.virtual = t
             // a few display refreshes so the views redraw at the new time
             try? await Task.sleep(for: .milliseconds(50))
+            let name = String(format: "%04d.jpg", i + 1)
+            await screenshot(w, to: screenDir.appendingPathComponent(name))
             guard let rep = capture(w, scale: scale) else { continue }
-            let url = dir.appendingPathComponent(String(format: "%04d.jpg", i + 1))
+            let url = dir.appendingPathComponent(name)
             pending.enter()
             writer.async {
                 if let data = rep.representation(using: .jpeg, properties: [.compressionFactor: 0.9]) {
@@ -154,6 +163,19 @@ enum Recorder {
             }
         }
         AnimationClock.shared.virtual = nil
+    }
+
+    /// Asks the workflow to `screencapture` the window as it is on screen,
+    /// and waits (up to 3 s) until it has
+    private static func screenshot(_ w: NSWindow, to url: URL) async {
+        guard let root = directory else { return }
+        let req = root.appendingPathComponent("req")
+        try? "\(w.windowNumber) \(url.path)\n".write(to: req, atomically: true, encoding: .utf8)
+        for _ in 0..<150 {
+            if !FileManager.default.fileExists(atPath: req.path) { return }
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        try? FileManager.default.removeItem(at: req)
     }
 
     private static func capture(_ w: NSWindow, scale: CGFloat) -> NSBitmapImageRep? {
