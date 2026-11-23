@@ -5,6 +5,7 @@ import { colorByCelsius, colorByHour, skyColors, mix, luminance, sunIntensity, s
 import { getCondition, weatherMarks, iceHalo } from '../js/conditions.js';
 import { createScene } from '../js/scene.js';
 import { rollText } from '../js/roll.js';
+import { track as trackEvent } from '../js/track.js';
 
 const $ = sel => document.querySelector(sel);
 const pad = n => String(n).padStart(2, '0');
@@ -462,3 +463,32 @@ document.addEventListener('click', e => {
   slots.forEach(el => { el.textContent = `${el.dataset.prefix || 'v'}${release.version}`; });
   if (release.url) document.querySelectorAll('[data-mac-download]').forEach(a => { a.href = release.url; });
 })();
+
+/* Analytics: the path from this page into the app and to the download.
+   Which sections people reach, and which links they follow from where */
+const sectionName = node => node.id || node.classList[0] || 'page';
+
+document.addEventListener('click', e => {
+  const a = e.target.closest('a[href]');
+  if (!a) return;
+  const href = a.getAttribute('href');
+  const section = a.closest('header') ? 'nav' : a.closest('footer') ? 'footer'
+    : a.closest('section') ? sectionName(a.closest('section')) : 'page';
+  const link = (a.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 60);
+  if (href.includes('Huecast.zip') || a.hasAttribute('data-mac-download')) {
+    trackEvent('mac_download', { section, link, version: a.querySelector('[data-mac-version]')?.textContent || '' });
+  } else if (href === '../' || href === '../index.html') trackEvent('open_app', { section, link });
+  else if (href.includes('how.html')) trackEvent('open_how', { section, link });
+  else if (href.includes('github.com')) trackEvent('view_source', { section, link });
+});
+
+if ('IntersectionObserver' in window) {
+  const seen = new IntersectionObserver(entries => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      seen.unobserve(e.target);
+      trackEvent('view_section', { section: sectionName(e.target) });
+    }
+  }, { threshold: 0.4 });
+  document.querySelectorAll('main section').forEach(s => seen.observe(s));
+}

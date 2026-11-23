@@ -14,6 +14,7 @@ import { rollText } from './roll.js';
 import { renderPicture } from './picture.js';
 import { cities } from './cities.js';
 import { THEMES, EXPLORE_PLACES, rank } from './explore.js';
+import { track, trackOnce } from './track.js';
 
 const REFRESH_MS = 15 * 60 * 1000;
 // the loader is the app icon, its sun and two cloud bands (see index.html)
@@ -99,6 +100,12 @@ function init() {
 
   const lat = parseFloat(params.get('lat'));
   const lon = parseFloat(params.get('lon'));
+  const standalone = matchMedia('(display-mode: standalone)').matches || !!navigator.standalone;
+  track('app_open', {
+    via: Number.isFinite(lat) && Number.isFinite(lon) ? 'link' : params.get('city') === 'random' ? 'random' : 'location',
+    display: standalone ? 'installed' : 'browser',
+    view: wallpaper === null ? 'full' : wallpaper === 'info' ? 'clean' : 'wallpaper',
+  });
   if (Number.isFinite(lat) && Number.isFinite(lon)) {
     return loadPlace({ lat, lon, label: params.get('name') || '' }, { share: false });
   }
@@ -116,9 +123,11 @@ async function locate({ initial = false } = {}) {
   else toast(locating, 15000);
   try {
     const pos = await getPosition();
+    track('locate', { result: 'ok', initial: initial ? 'yes' : 'no' });
     clearShare();
     await loadPlace({ ...pos, label: '' }, { share: false, remember: true });
   } catch (err) {
+    track('locate', { result: 'unavailable', initial: initial ? 'yes' : 'no' });
     const saved = initial && loadSavedPlace();
     if (saved) {
       await loadPlace(saved, { share: false });
@@ -373,6 +382,7 @@ function setLoading(on) {
 
 
 function showError(msg, err) {
+  track('app_error', { kind: msg });
   document.body.classList.remove('is-loading');
   el.icon.innerHTML = '<div class="icon-empty"></div>';
   state.iconKey = '';
@@ -555,6 +565,7 @@ function openDays() {
   closeMenu();
   renderDays();
   el.days.hidden = false;
+  track('open_days');
   (el.daysList.querySelector('[aria-current="true"]') || el.daysList.querySelector('.day'))?.focus({ preventScroll: true });
 }
 
@@ -648,6 +659,7 @@ function bindUI() {
   el.track.addEventListener('pointerdown', e => {
     if (!state.forecast) return;
     dragging = true;
+    trackOnce('use_timeline', { input: e.pointerType });
     el.track.setPointerCapture(e.pointerId);
     grow();
     magnify(e);
@@ -710,12 +722,14 @@ function bindUI() {
     const row = e.target.closest('[data-day]');
     if (!row) return;
     closeDays();
+    track('select_day', { index: [...el.daysList.querySelectorAll('[data-day]')].indexOf(row) });
     showDay(row.dataset.day === '' ? null : +row.dataset.day);
   });
 
   el.track.addEventListener('keydown', e => {
     if (!state.forecast) return;
     const keys = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 };
+    if (e.key in keys || e.key === 'Home' || e.key === 'End') trackOnce('use_timeline', { input: 'keyboard' });
     if (e.key in keys) select(state.selected + keys[e.key]);
     else if (e.key === 'Home') select(0);
     else if (e.key === 'End') select(state.forecast.hours.length - 1);
@@ -813,6 +827,7 @@ function bindUI() {
     const chip = e.target.closest('[data-theme]');
     if (chip) {
       explore.theme = chip.dataset.theme;
+      track('explore_theme', { theme: explore.theme });
       renderSearch();
       el.searchResults.querySelector(`[data-theme="${explore.theme}"]`)?.focus();
       return;
@@ -822,6 +837,7 @@ function bindUI() {
     if (pin) {
       const i = +pin.dataset.pin;
       togglePin(searchRows[i]);
+      track(pin.getAttribute('aria-pressed') === 'true' ? 'unpin' : 'pin', { from: 'search' });
       renderSearch(results);
       // keep keyboard focus on the same place's pin
       const same = [...el.searchResults.querySelectorAll('[data-pin]')]
@@ -923,6 +939,7 @@ function goToExtreme(theme) {
   if (!list.length) return false;
   const p = list[Math.floor(Math.random() * list.length)];
   lastDiceTheme = theme.id;
+  track('roll_dice', { theme: theme.id });
   toast(`${theme.name} right now · ${p.name}`);
   loadPlace({ lat: p.lat, lon: p.lon, label: p.label });
   return true;
@@ -949,7 +966,7 @@ function loadExtreme(theme) {
 let lastDiceTheme = '';
 function loadRandomExtreme() {
   withDiceBusy(() => {
-    if (!explore.now) return loadRandomCity();
+    if (!explore.now) { track('roll_dice', { theme: 'capital' }); return loadRandomCity(); }
     const themes = THEMES.filter(t => t.id !== lastDiceTheme).sort(() => Math.random() - 0.5);
     if (!themes.some(goToExtreme)) loadRandomCity();
   });
@@ -1045,6 +1062,9 @@ function sceneRow(p) {
 }
 
 function pickPlace(place) {
+  const typed = el.searchInput.value.trim().length >= 2;
+  const from = typed ? 'search' : place.demo ? 'scene' : place.note ? 'explore' : 'pin';
+  track('select_place', from === 'explore' ? { from, theme: explore.theme } : { from });
   closeSearch();
   if (place.demo) {
     writeURL(new URLSearchParams(`demo&${place.demo}`));
@@ -1075,6 +1095,7 @@ function bindMenu() {
     const place = currentPlace();
     if (!place) return;
     togglePin(place);
+    track(isPinned(place) ? 'pin' : 'unpin', { from: 'menu' });
     syncMenu();
     toast(isPinned(place) ? `Pinned ${place.name}` : `Unpinned ${place.name}`);
   });
@@ -1110,6 +1131,7 @@ function toggleClean() {
 /* null: everything · 'info': clean view · '': only the sky and the circle,
    for desktop wallpaper apps. Kept in the URL so the view can be shared */
 function setWallpaper(mode) {
+  if (mode !== state.wallpaper) track('change_view', { mode: mode === null ? 'full' : mode === 'info' ? 'clean' : 'wallpaper' });
   state.wallpaper = mode;
   document.body.classList.toggle('is-clean', mode !== null);
   document.body.classList.toggle('is-wallpaper', mode === '');
@@ -1148,6 +1170,7 @@ function syncMenu() {
 }
 
 function setUnit(unit) {
+  if (unit !== state.unit) track('change_units', { unit });
   state.unit = unit;
   try { localStorage.setItem('tc-unit', unit); } catch {}
   if (state.forecast) { render(); renderRange(); markSelected(); }
@@ -1197,6 +1220,7 @@ async function savePicture() {
     const file = (await state.picture) || (await pictureFile());
     if (navigator.standalone && navigator.canShare?.({ files: [file] })) {
       await navigator.share({ files: [file] });
+      track('save_picture', { method: 'share' });
       return;
     }
     const url = URL.createObjectURL(file);
@@ -1205,6 +1229,7 @@ async function savePicture() {
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
+    track('save_picture', { method: 'download' });
     toast('Picture saved');
   } catch (err) {
     if (err.name !== 'AbortError') toast('Could not save the picture');
@@ -1239,6 +1264,7 @@ function saveScene() {
   };
   if (isPinned(scene)) return toast('Already saved');
   togglePin(scene);
+  track('save_scene');
   toast('Scene saved · find it in search');
 }
 
@@ -1261,9 +1287,11 @@ async function share() {
       const file = await (state.picture || pictureFile().catch(() => null));
       if (file && navigator.canShare?.({ ...data, files: [file] })) data.files = [file];
       await navigator.share(data);
+      track('share', { method: data.files ? 'native_picture' : 'native' });
       return;
     }
     await navigator.clipboard.writeText(`${data.text} ${data.url}`);
+    track('share', { method: 'copy_link' });
     toast('Link copied');
   } catch (err) {
     if (err.name !== 'AbortError') toast('Could not share');
@@ -1271,6 +1299,7 @@ async function share() {
 }
 
 function openSearch() {
+  track('open_search');
   el.search.hidden = false;
   el.searchInput.value = '';
   loadExplore();
