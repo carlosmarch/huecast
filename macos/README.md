@@ -43,6 +43,12 @@ Every push that touches `macos/` builds the app on GitHub Actions
 (`.github/workflows/macos.yml`); the zipped `Huecast.app` is attached to the run.
 It's ad-hoc signed, so the first time, right click it and choose **Open**.
 
+**Analytics:** anonymous usage events go to Google Analytics 4 when the build
+has the keys (`GA_MEASUREMENT_ID` and `GA_API_SECRET`, passed to `build-app.sh`
+by CI); local builds and `swift run` have none, so they send nothing. Never
+coordinates or place names. To turn it off on a Mac:
+`defaults write app.huecast.mac analytics -bool false`.
+
 ## What's in it
 
 - The sky: the same palette and OKLCH blending, following the real sunrise and sunset

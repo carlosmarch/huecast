@@ -38,7 +38,10 @@ final class AppModel {
     /// +1 / -1 while scrubbing, for the direction numbers roll
     var rollDirection = 0
     var unit: TempUnit = TempUnit(rawValue: UserDefaults.standard.string(forKey: Keys.unit) ?? "") ?? .c {
-        didSet { UserDefaults.standard.set(unit.rawValue, forKey: Keys.unit) }
+        didSet {
+            UserDefaults.standard.set(unit.rawValue, forKey: Keys.unit)
+            if unit != oldValue { Analytics.track("change_units", ["unit": unit.rawValue]) }
+        }
     }
     var pins: [Place] = AppModel.load([Place].self, Keys.pins) ?? [] {
         didSet { AppModel.save(pins, Keys.pins) }
@@ -47,9 +50,15 @@ final class AppModel {
     var clock = Date()
 
     // overlays
-    var showSearch = false
-    var showDays = false
-    var wallpaper = false
+    var showSearch = false {
+        didSet { if showSearch, !oldValue { Analytics.track("open_search") } }
+    }
+    var showDays = false {
+        didSet { if showDays, !oldValue { Analytics.track("open_days") } }
+    }
+    var wallpaper = false {
+        didSet { if wallpaper != oldValue { Analytics.track("change_view", ["mode": wallpaper ? "wallpaper" : "window"]) } }
+    }
     var toast: String?
     /// the temperature next to the menu bar icon
     /// Huecast starts with the computer, so each login finds where you are.
@@ -57,6 +66,7 @@ final class AppModel {
     var openAtLogin = SMAppService.mainApp.status == .enabled {
         didSet {
             guard openAtLogin != (SMAppService.mainApp.status == .enabled) else { return }
+            if !settingUpLogin { Analytics.track("change_setting", ["setting": "open_at_login", "value": openAtLogin ? "on" : "off"]) }
             do {
                 if openAtLogin { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
             } catch {
@@ -73,14 +83,19 @@ final class AppModel {
         guard !UserDefaults.standard.bool(forKey: key), Bundle.main.bundleIdentifier != nil,
               Bundle.main.bundleURL.pathExtension == "app" else { return }
         UserDefaults.standard.set(true, forKey: key)
+        Analytics.track("app_first_launch")
+        settingUpLogin = true
         openAtLogin = true
+        settingUpLogin = false
     }
+    @ObservationIgnored private var settingUpLogin = false
 
     /// off: Huecast lives in the menu bar only, with no Dock icon
     var showInDock = UserDefaults.standard.object(forKey: "showInDock") as? Bool ?? true {
         didSet {
             UserDefaults.standard.set(showInDock, forKey: "showInDock")
             Self.applyDockPolicy(showInDock)
+            Analytics.track("change_setting", ["setting": "show_in_dock", "value": showInDock ? "on" : "off"])
         }
     }
 
@@ -95,7 +110,10 @@ final class AppModel {
     }
 
     var menuBarTemperature = UserDefaults.standard.object(forKey: "menuBarTemperature") as? Bool ?? true {
-        didSet { UserDefaults.standard.set(menuBarTemperature, forKey: "menuBarTemperature") }
+        didSet {
+            UserDefaults.standard.set(menuBarTemperature, forKey: "menuBarTemperature")
+            Analytics.track("change_setting", ["setting": "menu_bar_temperature", "value": menuBarTemperature ? "on" : "off"])
+        }
     }
 
     @ObservationIgnored private var loadTask: Task<Void, Never>?
@@ -185,8 +203,10 @@ final class AppModel {
         if CommandLine.arguments.contains("-demo") {
             startDemo()
         } else if let lat = Self.argument("-lat").flatMap({ Double($0) }), let lon = Self.argument("-lon").flatMap({ Double($0) }) {
+            Analytics.track("app_open", ["via": "arguments", "dock": showInDock ? "yes" : "no"])
             open(Place(lat: lat, lon: lon, label: Self.argument("-name") ?? ""))
         } else {
+            Analytics.track("app_open", ["via": "location", "dock": showInDock ? "yes" : "no"])
             locate(initial: true)
         }
     }
@@ -197,9 +217,11 @@ final class AppModel {
         loadTask = Task {
             do {
                 let coords = try await location.current()
+                Analytics.track("locate", ["result": "ok", "initial": initial ? "yes" : "no"])
                 await load(Place(lat: coords.latitude, lon: coords.longitude, label: ""), remember: true)
             } catch {
                 if Task.isCancelled { return }
+                Analytics.track("locate", ["result": "unavailable", "initial": initial ? "yes" : "no"])
                 if initial, let saved = Self.load(Place.self, Keys.place) {
                     await load(saved)
                 } else {
@@ -215,7 +237,10 @@ final class AppModel {
         loadTask = Task { await load(place) }
     }
 
-    func openRandomCity() { open(randomCity()) }
+    func openRandomCity() {
+        Analytics.track("roll_dice", ["theme": "capital"])
+        open(randomCity())
+    }
 
     func retry() {
         if let place { open(place) } else { locate(initial: true) }
@@ -250,6 +275,7 @@ final class AppModel {
             guard !Task.isCancelled, place == newPlace else { return }
             let message = (error as? URLError)?.code == .notConnectedToInternet ? "offline" : "no signal"
             status = .failed(message, detail: String(error.localizedDescription.prefix(120)))
+            if !demo { Analytics.track("app_error", ["kind": message]) }
             if Snapshots.directory != nil { Snapshots.run(self) }
         }
     }
@@ -352,6 +378,7 @@ final class AppModel {
     /// timeline; back to the next 24 hours before tomorrow
     func stepDay(_ d: Int) {
         guard forecast != nil, status == .ready, !hours.isEmpty else { return }
+        Analytics.trackOnce("use_timeline")
         if !jump(by: Double(d) * 86400, direction: d), d < 0, viewDay != nil {
             rollDirection = -1
             viewDay = nil
@@ -382,6 +409,7 @@ final class AppModel {
     func select(_ i: Int) {
         let i = min(max(i, 0), max(hours.count - 1, 0))
         guard i != selected else { return }
+        Analytics.trackOnce("use_timeline")
         rollDirection = i > selected ? 1 : -1
         selected = i
     }
@@ -390,6 +418,7 @@ final class AppModel {
         guard let f = forecast, time != viewDay else { return }
         viewDay = time
         rollDirection = 0
+        Analytics.track("select_day", ["index": time.flatMap { t in f.days.firstIndex { $0.time == t }.map { $0 + 1 } } ?? 0])
         if let time {
             // a day opens at midday
             selected = hours.firstIndex { sky(for: $0).local.hour == 12 } ?? 0
@@ -406,9 +435,11 @@ final class AppModel {
         guard let p = place else { return }
         if isPinned {
             pins.removeAll { $0.isSame(as: p) }
+            Analytics.track("unpin", ["from": "menu"])
             showToast("Unpinned")
         } else {
             pins.insert(p, at: 0)
+            Analytics.track("pin", ["from": "menu"])
             showToast("Pinned to search")
         }
     }
@@ -426,6 +457,7 @@ final class AppModel {
         ]
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(c.url?.absoluteString ?? "", forType: .string)
+        Analytics.track("share", ["method": "copy_link"])
         showToast("Link copied")
     }
 
