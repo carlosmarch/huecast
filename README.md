@@ -58,21 +58,24 @@ Geolocation needs `localhost` or HTTPS.
 
 ## Analytics
 
-Cookieless page views and events through [Umami](https://umami.is), all in `js/track.js`. Set `WEBSITE_ID` there to turn it on; while it's empty nothing loads. Only `huecast.app` is counted (not localhost, `?demo` or the landing page's embedded preview), the query string is not recorded (shared links carry coordinates), and events never include coordinates or place names.
+Google Analytics 4 on every page (landing page, How it works, the app), all in `js/track.js`. Set `MEASUREMENT_ID` there to turn it on; while it's empty nothing loads. Only `huecast.app` is counted (not localhost, `?demo` or the landing page's embedded preview). Page URLs are sent without the query string (shared links carry coordinates) and events never include coordinates or place names.
 
-| Event | Props |
-|---|---|
-| `open` | `via` link · random · location, `display` browser · installed, `view` full · clean · wallpaper |
-| `locate` | `result` ok · unavailable, `initial` |
-| `search` · `place` | `from` search · pin · scene · explore, `theme` |
-| `explore` · `dice` | `theme` |
-| `timeline` (once per load) · `days` · `day` | `input` · `index` |
-| `pin` · `unpin` | `from` menu · search |
-| `scene` · `picture` · `share` | `via` |
-| `units` · `view` | `unit` · `mode` |
-| `error` | `kind` no signal · offline · something broke |
-| `install` | |
-| Landing: `mac-download` · `open-app` · `source` | `where` (section) |
+In the GA4 property: turn off **Enhanced measurement → Page views → Page changes based on browser history events** (the app rewrites its URL with the place's coordinates), and register the event parameters below as custom dimensions to see them in reports.
+
+| Page | Event | Parameters |
+|---|---|---|
+| Landing | `view_section` | `section` |
+| Landing | `mac_download` · `open_app` · `open_how` · `view_source` | `section`, `link` (+ `version`) |
+| App | `app_open` | `via` link · random · location, `display` browser · installed, `view` full · clean · wallpaper |
+| App | `locate` | `result` ok · unavailable, `initial` |
+| App | `open_search` · `select_place` | `from` search · pin · scene · explore, `theme` |
+| App | `explore_theme` · `roll_dice` | `theme` |
+| App | `use_timeline` (once per load) · `open_days` · `select_day` | `input` · `index` |
+| App | `pin` · `unpin` | `from` menu · search |
+| App | `save_scene` · `save_picture` · `share` | `method` |
+| App | `change_units` · `change_view` | `unit` · `mode` |
+| App | `app_error` | `kind` no signal · offline · something broke |
+| App | `app_install` | |
 
 ## Files
 
@@ -92,7 +95,7 @@ js/cities.js      world capitals for random mode
 js/explore.js     Explore in search: extreme places, ranked by live weather
 js/picture.js     Save as picture: the screen drawn into a PNG
 js/roll.js        odometer-style number changes
-js/track.js       analytics (Umami), off until a website id is set
+js/track.js       analytics (GA4), off until a measurement id is set
 js/how.js         the "How it works" demos
 sw.js             offline cache
 ```

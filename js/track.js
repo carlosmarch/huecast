@@ -1,26 +1,24 @@
-/* Usage analytics: page views plus a few named events, cookieless.
+/* Usage analytics: Google Analytics 4 page views and events on every page
+ * (landing page, How it works, the app), so the whole path from the public
+ * site into the app and to the Mac download can be followed.
  *
- * Provider: Umami (https://umami.is). Set WEBSITE_ID to the site's id from
- * the Umami dashboard; while it's empty nothing loads and track() does
- * nothing. Only the live domain is counted: localhost, previews, the
- * landing page's embedded app and ?demo never send anything.
+ * Set MEASUREMENT_ID to the GA4 web stream's id (G-XXXXXXXXXX); while it's
+ * empty nothing loads and track() does nothing. Only the live domain is
+ * counted: localhost, previews, the landing page's embedded app and ?demo
+ * never send anything.
  *
- * Privacy: the query string is not recorded (shared links carry
+ * Privacy: page URLs are sent without the query string (shared links carry
  * coordinates), and events never include coordinates or place names.
- *
- * To switch provider, change load() and send() below; callers only use
- * track(name, props).
+ * Event names: letters, digits and underscores (GA4 rule).
  */
-const WEBSITE_ID = '';
-const SCRIPT = 'https://cloud.umami.is/script.js';
+const MEASUREMENT_ID = '';
 const DOMAIN = 'huecast.app';
 
-const queue = [];
 const once = new Set();
 
 const enabled = (() => {
   try {
-    return !!WEBSITE_ID
+    return !!MEASUREMENT_ID
       && location.hostname === DOMAIN
       && window.top === window
       && !new URLSearchParams(location.search).has('demo');
@@ -29,35 +27,34 @@ const enabled = (() => {
   }
 })();
 
-function load() {
-  const s = document.createElement('script');
-  s.defer = true;
-  s.src = SCRIPT;
-  s.dataset.websiteId = WEBSITE_ID;
-  s.dataset.domains = DOMAIN;
-  s.dataset.excludeSearch = 'true';
-  s.dataset.excludeHash = 'true';
-  s.onload = flush;
-  document.head.append(s);
-}
-
-function send(name, props) {
-  window.umami.track(name, props);
-}
-
-function flush() {
-  if (!window.umami) return;
-  while (queue.length) {
-    const [name, props] = queue.shift();
-    try { send(name, props); } catch {}
+// a URL without its query or hash; other sites' referrers as they are
+function clean(url) {
+  try {
+    const u = new URL(url);
+    return u.hostname === DOMAIN ? u.origin + u.pathname : url;
+  } catch {
+    return '';
   }
 }
 
-/* Record an event. Props: a few short strings, numbers or booleans */
-export function track(name, props) {
+function load() {
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function gtag() { window.dataLayer.push(arguments); };
+  gtag('js', new Date());
+  gtag('config', MEASUREMENT_ID, {
+    page_location: clean(location.href),
+    page_referrer: clean(document.referrer),
+  });
+  const s = document.createElement('script');
+  s.async = true;
+  s.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
+  document.head.append(s);
+}
+
+/* Record an event. Props: a few short strings or numbers */
+export function track(name, props = {}) {
   if (!enabled) return;
-  queue.push([name, props]);
-  flush();
+  try { gtag('event', name, props); } catch {}
 }
 
 /* The same, at most once per page load (e.g. the first timeline scrub) */
@@ -70,5 +67,5 @@ export function trackOnce(name, props) {
 if (enabled) {
   load();
   // the installed app: how many people add it to the home screen / dock
-  addEventListener('appinstalled', () => track('install'));
+  addEventListener('appinstalled', () => track('app_install'));
 }

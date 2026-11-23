@@ -464,13 +464,31 @@ document.addEventListener('click', e => {
   if (release.url) document.querySelectorAll('[data-mac-download]').forEach(a => { a.href = release.url; });
 })();
 
-/* Analytics: which calls to action people follow, and from where */
+/* Analytics: the path from this page into the app and to the download.
+   Which sections people reach, and which links they follow from where */
+const sectionName = node => node.id || node.classList[0] || 'page';
+
 document.addEventListener('click', e => {
   const a = e.target.closest('a[href]');
   if (!a) return;
   const href = a.getAttribute('href');
-  const where = a.closest('header') ? 'nav' : a.closest('footer') ? 'footer' : (a.closest('section')?.id || a.closest('section')?.classList[0] || 'page');
-  if (href.includes('Huecast.zip') || a.hasAttribute('data-mac-download')) trackEvent('mac-download', { where });
-  else if (href === '../' || href === '../index.html') trackEvent('open-app', { where });
-  else if (href.includes('github.com')) trackEvent('source', { where });
+  const section = a.closest('header') ? 'nav' : a.closest('footer') ? 'footer'
+    : a.closest('section') ? sectionName(a.closest('section')) : 'page';
+  const link = (a.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 60);
+  if (href.includes('Huecast.zip') || a.hasAttribute('data-mac-download')) {
+    trackEvent('mac_download', { section, link, version: a.querySelector('[data-mac-version]')?.textContent || '' });
+  } else if (href === '../' || href === '../index.html') trackEvent('open_app', { section, link });
+  else if (href.includes('how.html')) trackEvent('open_how', { section, link });
+  else if (href.includes('github.com')) trackEvent('view_source', { section, link });
 });
+
+if ('IntersectionObserver' in window) {
+  const seen = new IntersectionObserver(entries => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      seen.unobserve(e.target);
+      trackEvent('view_section', { section: sectionName(e.target) });
+    }
+  }, { threshold: 0.4 });
+  document.querySelectorAll('main section').forEach(s => seen.observe(s));
+}
