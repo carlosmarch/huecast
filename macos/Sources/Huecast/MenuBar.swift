@@ -108,7 +108,10 @@ struct MenuBarWidget: View {
         }
         // the panel is kept between opens, so onAppear can fire just once
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { note in
-            if let w = note.object as? NSWindow, w === panel { closeMainWindow() }
+            if let w = note.object as? NSWindow, w === panel {
+                closeMainWindow()
+                Analytics.track("open_widget")
+            }
         }
         .background(WindowFinder { w in if panel !== w { DispatchQueue.main.async { panel = w } } })
     }

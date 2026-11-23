@@ -8,7 +8,8 @@
  * never send anything.
  *
  * Privacy: page URLs are sent without the query string (shared links carry
- * coordinates), and events never include coordinates or place names.
+ * coordinates; only utm_ campaign tags are kept), and events never include
+ * coordinates or place names.
  * Event names: letters, digits and underscores (GA4 rule).
  */
 const MEASUREMENT_ID = '';
@@ -27,11 +28,14 @@ const enabled = (() => {
   }
 })();
 
-// a URL without its query or hash; other sites' referrers as they are
+// a URL without its query (except utm_ campaign tags) or hash; other
+// sites' referrers as they are
 function clean(url) {
   try {
     const u = new URL(url);
-    return u.hostname === DOMAIN ? u.origin + u.pathname : url;
+    if (u.hostname !== DOMAIN) return url;
+    const utm = [...u.searchParams].filter(([k]) => k.startsWith('utm_'));
+    return u.origin + u.pathname + (utm.length ? `?${new URLSearchParams(utm)}` : '');
   } catch {
     return '';
   }

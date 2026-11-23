@@ -151,8 +151,12 @@ struct ContentView: View {
         case .share: model.copyLink()
         case .units: model.toggleUnit()
         case .hide: withAnimation(.easeOut(duration: 0.35)) { clean.toggle() }
-        case .fullScreen: desktop.toggleFullScreen()
-        case .help: NSWorkspace.shared.open(URL(string: "https://huecast.app/how.html")!)
+        case .fullScreen:
+            Analytics.track("toggle_full_screen")
+            desktop.toggleFullScreen()
+        case .help:
+            Analytics.track("open_how")
+            NSWorkspace.shared.open(URL(string: "https://huecast.app/how.html?utm_source=huecast_mac&utm_medium=app")!)
         }
         return .handled
     }

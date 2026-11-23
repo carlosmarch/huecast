@@ -82,7 +82,7 @@ struct SearchPanel: View {
                 note("No places found")
             }
             ForEach(results) { r in
-                row(icon: "mappin", title: r.name, subtitle: r.region) { pick(r.place) }
+                row(icon: "mappin", title: r.name, subtitle: r.region) { pick(r.place, from: "search") }
             }
         } else if failed {
             note("Search is unavailable right now")
@@ -98,9 +98,12 @@ struct SearchPanel: View {
             if !model.pins.isEmpty {
                 note("Pinned")
                 ForEach(model.pins) { p in
-                    row(icon: "pin", title: p.label, subtitle: nil) { pick(p) }
+                    row(icon: "pin", title: p.label, subtitle: nil) { pick(p, from: "pin") }
                         .contextMenu {
-                            Button("Unpin") { model.pins.removeAll { $0.isSame(as: p) } }
+                            Button("Unpin") {
+                                model.pins.removeAll { $0.isSame(as: p) }
+                                Analytics.track("unpin", ["from": "search"])
+                            }
                         }
                 }
             }
@@ -130,7 +133,8 @@ struct SearchPanel: View {
         .buttonStyle(RowButtonStyle())
     }
 
-    private func pick(_ place: Place) {
+    private func pick(_ place: Place, from: String) {
+        Analytics.track("select_place", ["from": from])
         close()
         model.open(place)
     }

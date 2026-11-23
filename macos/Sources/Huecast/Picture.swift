@@ -29,6 +29,7 @@ enum Picture {
             guard response == .OK, let url = panel.url else { return }
             do {
                 try png.write(to: url)
+                Task { @MainActor in Analytics.track("save_picture", ["method": "save_panel"]) }
             } catch {
                 Task { @MainActor in model.showToast("Couldn't save the picture") }
             }

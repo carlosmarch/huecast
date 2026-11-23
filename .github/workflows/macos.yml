@@ -25,6 +25,10 @@ jobs:
         env:
           VERSION: 1.0.${{ github.run_number }}
           BUILD: ${{ github.run_number }}
+          # analytics keys (Settings → Secrets and variables → Actions);
+          # without them the app is built with analytics off
+          GA_MEASUREMENT_ID: ${{ vars.GA_MEASUREMENT_ID }}
+          GA_API_SECRET: ${{ secrets.GA_API_SECRET }}
         run: ./build-app.sh
       - name: Zip
         run: ditto -c -k --keepParent build/Huecast.app build/Huecast.zip

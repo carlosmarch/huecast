@@ -77,6 +77,8 @@ In the GA4 property: turn off **Enhanced measurement → Page views → Page cha
 | App | `app_error` | `kind` no signal · offline · something broke |
 | App | `app_install` | |
 
+**macOS app** (`macos/Sources/Huecast/Analytics.swift`): the same GA4 property through the Measurement Protocol, every event tagged `platform` = macos. CI writes the keys into the app's Info.plist from the repository variable `GA_MEASUREMENT_ID` and the secret `GA_API_SECRET` (GA4 → Admin → Data streams → web stream → Measurement Protocol API secrets); without them the app is built with analytics off. Events: `app_first_launch`, `app_open`, `locate`, `open_search`, `select_place`, `roll_dice`, `use_timeline`, `open_days`, `select_day`, `pin`/`unpin`, `save_picture`, `share`, `change_units`, `change_view`, `change_setting`, `toggle_full_screen`, `open_widget`, `open_how`, `app_error`. Its link to How it works carries `utm_source=huecast_mac`, and the web keeps `utm_` tags, so those visits show as coming from the Mac app.
+
 ## Files
 
 ```

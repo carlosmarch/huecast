@@ -20,6 +20,12 @@ if [ -n "${VERSION:-}" ]; then
   plutil -replace CFBundleShortVersionString -string "$VERSION" "$APP/Contents/Info.plist"
   plutil -replace CFBundleVersion -string "${BUILD:-1}" "$APP/Contents/Info.plist"
 fi
+# Analytics (GA4 Measurement Protocol) when CI passes the keys, so they
+# are never in the source: GA_MEASUREMENT_ID=G-XXXX GA_API_SECRET=...
+if [ -n "${GA_MEASUREMENT_ID:-}" ] && [ -n "${GA_API_SECRET:-}" ]; then
+  plutil -insert GAMeasurementID -string "$GA_MEASUREMENT_ID" "$APP/Contents/Info.plist"
+  plutil -insert GAAPISecret -string "$GA_API_SECRET" "$APP/Contents/Info.plist"
+fi
 
 # App icon from the web app's icon
 ICONSET=build/AppIcon.iconset
