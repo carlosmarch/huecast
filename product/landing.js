@@ -5,6 +5,7 @@ import { colorByCelsius, colorByHour, skyColors, mix, luminance, sunIntensity, s
 import { getCondition, weatherMarks, iceHalo } from '../js/conditions.js';
 import { createScene } from '../js/scene.js';
 import { rollText } from '../js/roll.js';
+import { track as trackEvent } from '../js/track.js';
 
 const $ = sel => document.querySelector(sel);
 const pad = n => String(n).padStart(2, '0');
@@ -462,3 +463,14 @@ document.addEventListener('click', e => {
   slots.forEach(el => { el.textContent = `${el.dataset.prefix || 'v'}${release.version}`; });
   if (release.url) document.querySelectorAll('[data-mac-download]').forEach(a => { a.href = release.url; });
 })();
+
+/* Analytics: which calls to action people follow, and from where */
+document.addEventListener('click', e => {
+  const a = e.target.closest('a[href]');
+  if (!a) return;
+  const href = a.getAttribute('href');
+  const where = a.closest('header') ? 'nav' : a.closest('footer') ? 'footer' : (a.closest('section')?.id || a.closest('section')?.classList[0] || 'page');
+  if (href.includes('Huecast.zip') || a.hasAttribute('data-mac-download')) trackEvent('mac-download', { where });
+  else if (href === '../' || href === '../index.html') trackEvent('open-app', { where });
+  else if (href.includes('github.com')) trackEvent('source', { where });
+});
