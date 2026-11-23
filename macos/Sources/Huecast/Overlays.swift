@@ -47,7 +47,7 @@ struct SearchPanel: View {
                         .textFieldStyle(.plain)
                         .font(.system(size: 17))
                         .focused($focused)
-                        .onSubmit { if let first = results?.first { pick(first.place) } }
+                        .onSubmit { if let first = results?.first { pick(first.place, from: "search") } }
                 }
                 .padding(.horizontal, 14)
                 .frame(height: 44)
