@@ -12,7 +12,7 @@
  * coordinates or place names.
  * Event names: letters, digits and underscores (GA4 rule).
  */
-const MEASUREMENT_ID = '';
+const MEASUREMENT_ID = 'G-HCMPQFEMSP';
 const DOMAIN = 'huecast.app';
 
 const once = new Set();
